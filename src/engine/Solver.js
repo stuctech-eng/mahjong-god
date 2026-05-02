@@ -15,12 +15,9 @@ export function quickSolve(tiles, depth) {
 
 export function analyzeBoardQuality(tiles) {
   var pairs = getAvailablePairs(tiles);
-  if (pairs.length === 0) {
-    return { solvable: false, branchingFactor: 0, deadlockRisk: 1 };
-  }
+  if (pairs.length === 0) return { solvable: false, branchingFactor: 0, deadlockRisk: 1 };
   var solved = 0;
-  var i;
-  for (i = 0; i < 8; i++) {
+  for (var i = 0; i < 8; i++) {
     var copy = tiles.map(function(t) { return Object.assign({}, t); });
     if (quickSolve(copy)) solved++;
   }

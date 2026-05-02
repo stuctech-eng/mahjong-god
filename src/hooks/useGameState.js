@@ -4,7 +4,6 @@ import { generateBoard } from "../engine/BoardGenerator.js";
 import { isTileFree, tilesMatch, getAvailablePairs, removePair, restorePair } from "../engine/TileLogic.js";
 import { calculatePoints } from "../systems/Scoring.js";
 import { Haptics } from "../systems/Haptics.js";
-import { Audio } from "../systems/Audio.js";
 import { evaluateFlow, FLOW_EVENTS } from "../systems/FlowControl.js";
 import { useAnalytics } from "./useAnalytics.js";
 
@@ -47,14 +46,14 @@ export function useGameState({ skillScore, onSkillUpdate, onSessionEnd }) {
     if (activeTiles.length === 0) {
       var snap = analytics.recordResult("win");
       setStatus(GAME_STATUS.WON);
-      Haptics.win(); Audio.win();
+      Haptics.win(); 
       if (onSessionEnd) onSessionEnd(snap, score, "win");
       return;
     }
     if (pairs.length === 0 && activeTiles.length > 0) {
       var snap2 = analytics.recordResult("loss");
       setStatus(GAME_STATUS.LOST);
-      Haptics.lose(); Audio.lose();
+      Haptics.lose(); 
       if (onSessionEnd) onSessionEnd(snap2, score, "loss");
       return;
     }
@@ -91,7 +90,7 @@ export function useGameState({ skillScore, onSkillUpdate, onSessionEnd }) {
     setFlowEvent(null);
     setHintIds([]);
     if (!selected) {
-      Haptics.select(); Audio.select();
+      Haptics.select(); 
       setSelected(tile);
       return;
     }
@@ -111,16 +110,16 @@ export function useGameState({ skillScore, onSkillUpdate, onSessionEnd }) {
       setTiles(function(prev) { return removePair(prev, selected.id, tile.id); });
       setSelected(null);
       if (newCombo >= 2) {
-        Haptics.combo(newCombo); Audio.combo(newCombo);
+        Haptics.combo(newCombo); 
         clearTimeout(comboTimer.current);
         setComboPopup({ count: newCombo, pts: pts });
         comboTimer.current = setTimeout(function() { setComboPopup(null); }, 1600);
       } else {
-        Haptics.match(); Audio.match();
+        Haptics.match(); 
       }
     } else {
       analytics.recordMistake();
-      Haptics.mistake(); Audio.mistake();
+      Haptics.mistake(); 
       setMistakeId(tile.id);
       setCombo(0);
       setTimeout(function() { setMistakeId(null); }, 400);
@@ -131,7 +130,7 @@ export function useGameState({ skillScore, onSkillUpdate, onSessionEnd }) {
   var handleHint = useCallback(function() {
     if (status !== GAME_STATUS.PLAYING) return;
     analytics.recordHint();
-    Haptics.hint(); Audio.hint();
+    Haptics.hint(); 
     var pairs = getAvailablePairs(tiles);
     if (pairs.length === 0) return;
     var pair = pairs[0];
@@ -145,7 +144,7 @@ export function useGameState({ skillScore, onSkillUpdate, onSessionEnd }) {
   var handleUndo = useCallback(function() {
     if (status !== GAME_STATUS.PLAYING || history.length === 0) return;
     analytics.recordUndo();
-    Haptics.undo(); Audio.undo();
+    Haptics.undo(); 
     var last = history[history.length - 1];
     setTiles(function(prev) { return restorePair(prev, last.id1, last.id2); });
     setHistory(function(h) { return h.slice(0, -1); });
@@ -156,7 +155,7 @@ export function useGameState({ skillScore, onSkillUpdate, onSessionEnd }) {
   var handleShuffle = useCallback(function() {
     if (status !== GAME_STATUS.PLAYING) return;
     analytics.recordShuffle();
-    Haptics.shuffle(); Audio.shuffle();
+    Haptics.shuffle(); 
     setTiles(function(prev) {
       var active = prev.filter(function(t) { return !t.removed; });
       var types  = active.map(function(t) { return { suit:t.suit, value:t.value }; });
