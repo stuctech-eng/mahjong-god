@@ -1,8 +1,8 @@
+export function HUD({ score, activeTiles, totalTiles, availPairs, skillScore, timerDisplay, onPause, isLandscape }) {
 
 function merge(a, b) { return Object.assign({}, a, b); }
-import { getDifficultyInfo } from "../analytics/SkillScore.js";
 
-export function HUD({ score, activeTiles, totalTiles, availPairs, skillScore, timerDisplay, onPause, isLandscape }) {
+import { getDifficultyInfo } from "../analytics/SkillScore.js";
   var diff     = getDifficultyInfo(skillScore);
   var progress = totalTiles > 0 ? ((totalTiles - activeTiles) / totalTiles) * 100 : 0;
 
@@ -77,8 +77,8 @@ function Btn({ label, icon, onClick, disabled, color, big }) {
       gap:           4,
       padding:       big ? "14px 0" : "10px 0",
       flex:          big ? 1 : "none",
-      width:         big ? "auto" : 56,
-      minHeight:     big ? 64 : 52,
+      width:         big ? "auto" : 50,
+      minHeight:     big ? 64 : 48,
       fontSize:      10, fontWeight:800, letterSpacing:1.5,
       boxShadow:     disabled ? "none" : "0 0 10px " + color + "22",
     }}>
@@ -107,7 +107,7 @@ var ps = {
 };
 
 var ls = {
-  sidebar:    { display:"flex", flexDirection:"column", alignItems:"center", gap:8, padding:"env(safe-area-inset-top,10px) 14px 10px", background:"rgba(0,0,0,0.95)", borderRight:"1px solid rgba(255,107,0,0.15)", minWidth:84, flexShrink:0 },
+  sidebar:    { display:"flex", flexDirection:"column", alignItems:"center", gap:8, padding:"env(safe-area-inset-top,10px) 14px 10px", background:"rgba(0,0,0,0.85)", borderRight:"1px solid rgba(255,107,0,0.15)", minWidth:90, flexShrink:0 },
   scoreLabel: { fontSize:8, color:"rgba(255,107,0,0.6)", letterSpacing:2, textTransform:"uppercase" },
   scoreValue: { fontSize:20, fontWeight:900, color:"#ff6b00", lineHeight:1 },
   timerLabel: { fontSize:8, color:"rgba(0,229,255,0.6)", letterSpacing:2, textTransform:"uppercase" },
@@ -118,6 +118,6 @@ var ls = {
   bar:        { width:52, height:2, background:"rgba(255,255,255,0.08)", borderRadius:1, overflow:"hidden" },
   barFill:    { height:"100%", background:"linear-gradient(90deg,#ff6b00,#00e5ff)", borderRadius:1, transition:"width 0.4s ease" },
   diffBadge:  { border:"1px solid", borderRadius:6, padding:"2px 6px", fontSize:8, fontWeight:800, letterSpacing:1 },
-  actions:    { display:"flex", flexDirection:"column", gap:8, padding:"env(safe-area-inset-top,10px) 14px 10px 14px", background:"rgba(0,0,0,0.95)", borderLeft:"1px solid rgba(0,229,255,0.1)", minWidth:90, flexShrink:0, alignItems:"center", justifyContent:"center" },
-  pauseBtn:   { background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, color:"#fff", fontSize:12, fontWeight:900, width:48, height:48, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", letterSpacing:1 },
+  actions:    { display:"flex", flexDirection:"column", gap:10, padding:"env(safe-area-inset-top,10px) 10px 10px 10px", paddingTop:20, background:"rgba(0,0,0,0.85)", borderLeft:"1px solid rgba(0,229,255,0.1)", minWidth:72, flexShrink:0, alignItems:"center", justifyContent:"flex-start", marginLeft:-6 },
+  pauseBtn:   { background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, color:"#fff", fontSize:12, fontWeight:900, width:44, height:44, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", letterSpacing:1 },
 };
