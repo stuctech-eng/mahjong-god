@@ -103,22 +103,6 @@ export default function App() {
 
   var isPlaying = game.status === GAME_STATUS.PLAYING && !showMenu && !showLeaderboard && !showSettings;
 
-  var boardEl = (
-    <div style={lay.boardArea}>
-      <div style={lay.boardScroll}>
-        <Board
-          tiles={game.tiles}
-          selected={game.selected}
-          hintIds={game.hintIds}
-          matchIds={game.matchIds}
-          mistakeId={game.mistakeId}
-          glowIds={game.glowIds}
-          onTileClick={game.handleTileClick}
-        />
-      </div>
-    </div>
-  );
-
   return (
     <div style={lay.root}>
       <div style={lay.bg} />
@@ -152,16 +136,36 @@ export default function App() {
       {isPlaying && isLandscape && (
         <div style={lay.landscape}>
           <HUD score={game.score} activeTiles={game.activeTiles.length} totalTiles={game.totalTiles} availPairs={game.availPairs} skillScore={activeSkill} timerDisplay={timerDisplay} onPause={handlePause} isLandscape={true} />
-          {boardEl}
+          <div style={lay.boardAreaLandscape}>
+            <div style={lay.boardScrollLandscape}>
+              <Board
+                tiles={game.tiles} selected={game.selected}
+                hintIds={game.hintIds} matchIds={game.matchIds}
+                mistakeId={game.mistakeId} glowIds={game.glowIds}
+                onTileClick={game.handleTileClick}
+              />
+            </div>
+          </div>
           <ActionBar onHint={game.handleHint} onUndo={game.handleUndo} onShuffle={game.handleShuffle} canUndo={game.history.length>0} isLandscape={true} onPause={handlePause} />
         </div>
       )}
 
       {isPlaying && !isLandscape && (
         <div style={lay.portrait}>
-          <HUD score={game.score} activeTiles={game.activeTiles.length} totalTiles={game.totalTiles} availPairs={game.availPairs} skillScore={activeSkill} timerDisplay={timerDisplay} onPause={handlePause} isLandscape={false} />
-          {boardEl}
-          <ActionBar onHint={game.handleHint} onUndo={game.handleUndo} onShuffle={game.handleShuffle} canUndo={game.history.length>0} isLandscape={false} />
+          <div style={lay.hudWrap}>
+            <HUD score={game.score} activeTiles={game.activeTiles.length} totalTiles={game.totalTiles} availPairs={game.availPairs} skillScore={activeSkill} timerDisplay={timerDisplay} onPause={handlePause} isLandscape={false} />
+          </div>
+          <div style={lay.boardAreaPortrait}>
+            <Board
+              tiles={game.tiles} selected={game.selected}
+              hintIds={game.hintIds} matchIds={game.matchIds}
+              mistakeId={game.mistakeId} glowIds={game.glowIds}
+              onTileClick={game.handleTileClick}
+            />
+          </div>
+          <div style={lay.actionWrap}>
+            <ActionBar onHint={game.handleHint} onUndo={game.handleUndo} onShuffle={game.handleShuffle} canUndo={game.history.length>0} isLandscape={false} />
+          </div>
         </div>
       )}
 
@@ -173,12 +177,15 @@ export default function App() {
 }
 
 var lay = {
-  root:       { width:"100%", height:"100%", display:"flex", flexDirection:"column", overflow:"hidden", position:"relative", background:"#000" },
-  bg:         { position:"fixed", inset:0, background:"#000", zIndex:0, pointerEvents:"none" },
-  glow1:      { position:"fixed", top:"-20%", left:"-10%", width:"60%", height:"60%", background:"radial-gradient(ellipse,rgba(255,107,0,0.12) 0%,transparent 70%)", zIndex:0, pointerEvents:"none" },
-  glow2:      { position:"fixed", bottom:"-20%", right:"-10%", width:"60%", height:"60%", background:"radial-gradient(ellipse,rgba(0,229,255,0.08) 0%,transparent 70%)", zIndex:0, pointerEvents:"none" },
-  portrait:   { display:"flex", flexDirection:"column", height:"100%", position:"relative", zIndex:1 },
-  landscape:  { display:"flex", flexDirection:"row", height:"100%", position:"relative", zIndex:1 },
-  boardArea:  { flex:1, minHeight:0, position:"relative", zIndex:1 },
-  boardScroll:{ width:"100%", height:"100%", overflowX:"auto", overflowY:"auto", WebkitOverflowScrolling:"touch", display:"flex", alignItems:"center", justifyContent:"center", padding:"8px" },
+  root:                { width:"100%", height:"100%", overflow:"hidden", position:"relative", background:"#000" },
+  bg:                  { position:"fixed", inset:0, background:"#000", zIndex:0, pointerEvents:"none" },
+  glow1:               { position:"fixed", top:"-20%", left:"-10%", width:"60%", height:"60%", background:"radial-gradient(ellipse,rgba(255,107,0,0.12) 0%,transparent 70%)", zIndex:0, pointerEvents:"none" },
+  glow2:               { position:"fixed", bottom:"-20%", right:"-10%", width:"60%", height:"60%", background:"radial-gradient(ellipse,rgba(0,229,255,0.08) 0%,transparent 70%)", zIndex:0, pointerEvents:"none" },
+  portrait:            { position:"absolute", inset:0, display:"flex", flexDirection:"column", zIndex:1 },
+  landscape:           { position:"absolute", inset:0, display:"flex", flexDirection:"row", zIndex:1 },
+  hudWrap:             { flexShrink:0 },
+  actionWrap:          { flexShrink:0 },
+  boardAreaPortrait:   { flex:1, minHeight:0, position:"relative" },
+  boardAreaLandscape:  { flex:1, minWidth:0, minHeight:0, position:"relative", overflow:"scroll", WebkitOverflowScrolling:"touch" },
+  boardScrollLandscape:{ padding:8 },
 };
