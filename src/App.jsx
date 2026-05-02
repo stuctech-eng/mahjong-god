@@ -1,9 +1,9 @@
-import { useCallback, useMemo, useState, useEffect, useRef } from "react";
 import { useGameState, GAME_STATUS } from "./hooks/useGameState.js";
 import { usePersistence }            from "./hooks/usePersistence.js";
 import { buildScoreSummary }         from "./systems/Scoring.js";
 import { Board }                     from "./components/Board.jsx";
 import { HUD, ActionBar }            from "./components/HUD.jsx";
+import { useCallback, useMemo, useState, useEffect, useRef } from "react";
 import { MainMenu, WinScreen, LostScreen } from "./components/Menu.jsx";
 import { ComboPopup, FlowAlert, SyncIndicator, PauseMenu } from "./components/Overlays.jsx";
 import { Leaderboard } from "./components/Leaderboard.jsx";
@@ -178,7 +178,7 @@ var lay = {
   glow1:      { position:"fixed", top:"-20%", left:"-10%", width:"60%", height:"60%", background:"radial-gradient(ellipse,rgba(255,107,0,0.12) 0%,transparent 70%)", zIndex:0, pointerEvents:"none" },
   glow2:      { position:"fixed", bottom:"-20%", right:"-10%", width:"60%", height:"60%", background:"radial-gradient(ellipse,rgba(0,229,255,0.08) 0%,transparent 70%)", zIndex:0, pointerEvents:"none" },
   portrait:   { display:"flex", flexDirection:"column", height:"100%", position:"relative", zIndex:1 },
-  landscape:  { display:"flex", flexDirection:"row", height:"100%", position:"relative", zIndex:1 },
+  landscape:  { display:"flex", flexDirection:"row", height:"100%", position:"relative", zIndex:1, maxWidth:"96%", margin:"0 auto" },
   boardArea:  { flex:1, minHeight:0, position:"relative", zIndex:1 },
   boardScroll:{ width:"100%", height:"100%", overflowX:"auto", overflowY:"auto", WebkitOverflowScrolling:"touch", display:"flex", alignItems:"center", justifyContent:"center", padding:"8px" },
 };
