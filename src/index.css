@@ -1,0 +1,74 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+html {
+  height: 100%;
+  height: -webkit-fill-available;
+}
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  height: -webkit-fill-available;
+  background: #000;
+  font-family: -apple-system, sans-serif;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+  user-select: none;
+  -webkit-user-select: none;
+}
+#root {
+  width: 100%;
+  height: 100%;
+  height: -webkit-fill-available;
+  display: flex;
+  flex-direction: column;
+}
+button {
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+button:active { transform: scale(0.93); }
+
+@keyframes flash {
+  0%   { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+@keyframes tileMatch {
+  0%   { transform: scale(1);   opacity: 1; }
+  40%  { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0);   opacity: 0; }
+}
+@keyframes tileShake {
+  0%,100% { transform: translateX(0); }
+  20%     { transform: translateX(-6px) rotate(-3deg); }
+  40%     { transform: translateX(6px)  rotate(3deg); }
+  60%     { transform: translateX(-4px) rotate(-1deg); }
+  80%     { transform: translateX(4px)  rotate(1deg); }
+}
+@keyframes tileAppear {
+  0%   { transform: scale(0.6) translateY(10px); opacity: 0; }
+  100% { transform: scale(1)   translateY(0);    opacity: 1; }
+}
+@keyframes comboIn {
+  0%   { transform: translate(-50%,-50%) scale(0.3); opacity: 0; }
+  60%  { transform: translate(-50%,-50%) scale(1.15); opacity: 1; }
+  100% { transform: translate(-50%,-50%) scale(1);    opacity: 1; }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pauseFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes glowPulse {
+  0%,100% { box-shadow: 0 0 12px rgba(255,214,0,0.5); }
+  50%     { box-shadow: 0 0 24px rgba(255,214,0,1); }
+}
