@@ -36,60 +36,72 @@ export function Tile({ tile, allTiles, isSelected, isHint, isMatch, isMistake, i
   var isBam = tile.suit === "bam";
 
   var base = {
-    position:"absolute", width:TILE_W-2, height:TILE_H-2, borderRadius:6,
-    cursor: free ? "pointer" : "default",
-    display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
-    userSelect:"none", WebkitUserSelect:"none", overflow:"hidden",
-    zIndex: tile.layer * 10 + (isSelected ? 100 : 1),
+    position:        "absolute",
+    width:           TILE_W - 2,
+    height:          TILE_H - 2,
+    borderRadius:    6,
+    cursor:          free ? "pointer" : "default",
+    display:         "flex",
+    flexDirection:   "column",
+    alignItems:      "center",
+    justifyContent:  "center",
+    userSelect:      "none",
+    WebkitUserSelect:"none",
+    overflow:        "hidden",
+    zIndex:          tile.layer * 10 + (isSelected ? 100 : 1),
+    transition:      "transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease",
   };
 
   var style;
+
   if (!free) {
     style = Object.assign({}, base, {
-      background:"linear-gradient(160deg,#1e1e28,#14141c)",
-      border:"2px solid #0a0a10", opacity:0.6, transform:"scale(0.95)",
+      background:  "linear-gradient(160deg,#1e1e28,#14141c)",
+      border:      "2px solid #0a0a10",
+      opacity:     0.6,
+      transform:   "scale(0.95)",
+      transition:  "none",
     });
   } else if (isMatch) {
     style = Object.assign({}, base, {
-      background:"linear-gradient(160deg,#fff9e6,#ffd700)",
-      border:"2px solid #ffd700",
-      boxShadow:"0 0 30px rgba(255,215,0,1)",
-      animation:"tileMatch 0.38s ease-out forwards",
+      background:  "linear-gradient(160deg,#fff9e6,#ffd700)",
+      border:      "2px solid #ffd700",
+      boxShadow:   "0 0 30px rgba(255,215,0,1)",
+      animation:   "matchPop 0.2s ease-out forwards",
+      transition:  "none",
     });
   } else if (isMistake) {
     style = Object.assign({}, base, {
-      background:"linear-gradient(160deg,#fdf6ec,#f5e6d0)",
-      border:"3px solid #c0392b",
-      boxShadow:"0 0 16px rgba(192,57,43,0.9)",
-      animation:"tileShake 0.38s ease-out",
+      background:  "linear-gradient(160deg,#fdf6ec,#f5e6d0)",
+      border:      "3px solid #c0392b",
+      boxShadow:   "0 0 16px rgba(192,57,43,0.9)",
+      animation:   "shake 0.25s ease-out",
+      transition:  "none",
     });
   } else if (isSelected) {
     style = Object.assign({}, base, {
-      background:"linear-gradient(160deg,#fffde7,#fff59d,#ffd600)",
-      border:"3px solid #ffd600",
-      boxShadow:"0 0 28px rgba(255,214,0,0.95), 0 "+(4+tile.layer)+"px "+(12+tile.layer*2)+"px rgba(0,0,0,0.5)",
-      transform:"translateY(-7px) scale(1.09)",
-      transition:"transform 0.12s cubic-bezier(0.34,1.56,0.64,1)",
-      animation:"glowPulse 1.5s ease-in-out infinite",
+      background:  "linear-gradient(160deg,#fffde7,#fff59d,#ffd600)",
+      border:      "3px solid #ffd600",
+      boxShadow:   "0 0 28px rgba(255,214,0,0.95), 0 "+(4+tile.layer)+"px "+(12+tile.layer*2)+"px rgba(0,0,0,0.5)",
+      transform:   "translateY(-7px) scale(1.09)",
+      animation:   "glowPulse 1.5s ease-in-out infinite",
     });
   } else if (isHint) {
     style = Object.assign({}, base, {
-      background:"linear-gradient(160deg,#e8f8e8,#c8f0c8)",
-      border:"3px solid #27ae60",
-      boxShadow:"0 0 20px rgba(39,174,96,0.9)",
-      transform:"translateY(-4px) scale(1.06)",
-      transition:"transform 0.12s ease",
+      background:  "linear-gradient(160deg,#e8f8e8,#c8f0c8)",
+      border:      "3px solid #27ae60",
+      boxShadow:   "0 0 20px rgba(39,174,96,0.9)",
+      transform:   "translateY(-4px) scale(1.06)",
     });
   } else {
     var depth = "0 "+(3+tile.layer)+"px "+(6+tile.layer*2)+"px rgba(0,0,0,0.45)";
     var inner = "inset 0 2px 0 rgba(255,255,255,0.85),inset 0 -3px 0 rgba(0,0,0,0.15),inset -2px 0 0 rgba(0,0,0,0.08)";
     var glow  = isGlow ? "0 0 14px rgba(255,107,0,0.5)," : "";
     style = Object.assign({}, base, {
-      background:"linear-gradient(170deg,#fdfaf3 0%,#f5ead5 50%,#ede0c4 100%)",
-      border:"2px solid #b8a88a",
-      boxShadow: glow + depth + "," + inner,
-      transform:"scale(1)",
-      transition:"transform 0.1s ease,box-shadow 0.1s ease",
+      background:  "linear-gradient(170deg,#fdfaf3 0%,#f5ead5 50%,#ede0c4 100%)",
+      border:      "2px solid #b8a88a",
+      boxShadow:   glow + depth + "," + inner,
+      transform:   free ? "scale(1.02)" : "scale(1)",
     });
   }
 
@@ -98,7 +110,7 @@ export function Tile({ tile, allTiles, isSelected, isHint, isMatch, isMistake, i
       {free && (
         <div style={{ position:"absolute", top:0, left:0, right:0, height:"40%", background:"linear-gradient(180deg,rgba(255,255,255,0.7) 0%,transparent 100%)", borderRadius:"4px 4px 0 0", pointerEvents:"none" }} />
       )}
-      <div style={{ fontSize: isBam ? 20 : 24, lineHeight:1, fontWeight:900, color: free ? color : "rgba(60,60,80,0.25)", fontFamily: isBam ? "monospace" : "'Noto Serif SC','STSong',serif", textShadow: free ? "0 1px 3px rgba(0,0,0,0.2)" : "none" }}>
+      <div style={{ fontSize:isBam ? 20 : 24, lineHeight:1, fontWeight:900, color:free ? color : "rgba(60,60,80,0.25)", fontFamily:isBam ? "monospace" : "'Noto Serif SC','STSong',serif", textShadow:free ? "0 1px 3px rgba(0,0,0,0.2)" : "none" }}>
         {sym}
       </div>
       {label && free && (
@@ -107,7 +119,7 @@ export function Tile({ tile, allTiles, isSelected, isHint, isMatch, isMistake, i
         </div>
       )}
       {isMatch && (
-        <div style={{ position:"absolute", inset:0, background:"rgba(255,255,255,0.9)", borderRadius:4, animation:"flash 0.38s ease-out forwards", pointerEvents:"none" }} />
+        <div style={{ position:"absolute", inset:0, background:"rgba(255,255,255,0.9)", borderRadius:4, animation:"flashWhite 0.2s ease-out forwards", pointerEvents:"none" }} />
       )}
     </div>
   );
