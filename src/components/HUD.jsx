@@ -118,6 +118,6 @@ var ls = {
   bar:        { width:52, height:2, background:"rgba(255,255,255,0.08)", borderRadius:1, overflow:"hidden" },
   barFill:    { height:"100%", background:"linear-gradient(90deg,#ff6b00,#00e5ff)", borderRadius:1, transition:"width 0.4s ease" },
   diffBadge:  { border:"1px solid", borderRadius:6, padding:"2px 6px", fontSize:8, fontWeight:800, letterSpacing:1 },
-  actions:    { display:"flex", flexDirection:"column", gap:8, padding:"env(safe-area-inset-top,10px) env(safe-area-inset-right,14px) 10px 14px", background:"rgba(0,0,0,0.95)", borderLeft:"1px solid rgba(0,229,255,0.1)", minWidth:72, flexShrink:0, alignItems:"center", justifyContent:"center" },
+  actions:    { display:"flex", flexDirection:"column", gap:8, paddingTop:"env(safe-area-inset-top,10px)", paddingRight:"max(env(safe-area-inset-right),20px)", paddingBottom:10, paddingLeft:14, background:"rgba(0,0,0,0.95)", borderLeft:"1px solid rgba(0,229,255,0.1)", minWidth:72, flexShrink:0, alignItems:"center", justifyContent:"center" },
   pauseBtn:   { background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, color:"#fff", fontSize:12, fontWeight:900, width:48, height:48, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", letterSpacing:1 },
 };
