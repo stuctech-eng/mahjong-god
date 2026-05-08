@@ -50,7 +50,7 @@ export function Board({ tiles, selected, hintIds, matchIds, mistakeId, glowIds, 
       var sx = (size.w - 8) / rawW;
       var sy = (size.h - 8) / rawH;
       scale = Math.min(sx, sy, 1.0);
-      scale = Math.max(scale, 0.3);
+      scale = Math.max(scale, 0.55);
     }
 
     var sorted = tiles
