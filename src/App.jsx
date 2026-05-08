@@ -127,11 +127,15 @@ export default function App() {
     </div>
   );
 
+  var bgStyle = { position:"fixed", inset:0, background:theme.bg, zIndex:0, pointerEvents:"none" };
+  var glow1Style = { position:"fixed", top:"-20%", left:"-10%", width:"60%", height:"60%", background:"radial-gradient(ellipse," + theme.glow1 + " 0%,transparent 70%)", zIndex:0, pointerEvents:"none" };
+  var glow2Style = { position:"fixed", bottom:"-20%", right:"-10%", width:"60%", height:"60%", background:"radial-gradient(ellipse," + theme.glow2 + " 0%,transparent 70%)", zIndex:0, pointerEvents:"none" };
+
   return (
     <div style={Object.assign({}, lay.root, { background: theme.bg })}>
-      <div style={lay.bg} />
-      <div style={lay.glow1} />
-      <div style={lay.glow2} />
+      <div style={bgStyle} />
+      <div style={glow1Style} />
+      <div style={glow2Style} />
       <SyncIndicator status={syncStatus} />
 
       {showLeaderboard && <Leaderboard onClose={function() { setShowLeaderboard(false); }} />}
