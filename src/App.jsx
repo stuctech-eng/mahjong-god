@@ -1,13 +1,14 @@
+import { useCallback, useMemo, useState, useEffect, useRef } from "react";
 import { useGameState, GAME_STATUS } from "./hooks/useGameState.js";
 import { usePersistence }            from "./hooks/usePersistence.js";
 import { buildScoreSummary }         from "./systems/Scoring.js";
 import { Board }                     from "./components/Board.jsx";
 import { HUD, ActionBar }            from "./components/HUD.jsx";
-import { useCallback, useMemo, useState, useEffect, useRef } from "react";
 import { MainMenu, WinScreen, LostScreen } from "./components/Menu.jsx";
 import { ComboPopup, FlowAlert, SyncIndicator, PauseMenu } from "./components/Overlays.jsx";
 import { Leaderboard } from "./components/Leaderboard.jsx";
 import { Settings }    from "./components/Settings.jsx";
+import { getTheme, loadTheme, saveTheme } from "./systems/Themes.js";
 
 var DIFFICULTY_SCORES = { easy:15, medium:45, hard:72, god:92 };
 
@@ -31,17 +32,24 @@ export default function App() {
   var persistSession = pers.persistSession;
   var updateDisplayName = pers.updateDisplayName;
 
-  var p1 = useState(false);    var isPaused        = p1[0]; var setIsPaused        = p1[1];
-  var p2 = useState("turtle"); var savedLayout     = p2[0]; var setSavedLayout     = p2[1];
-  var p3 = useState(0);        var timerSecs       = p3[0]; var setTimerSecs       = p3[1];
-  var p4 = useState(false);    var timerRunning    = p4[0]; var setTimerRunning    = p4[1];
-  var p5 = useState(false);    var showMenu        = p5[0]; var setShowMenu        = p5[1];
-  var p6 = useState(false);    var showLeaderboard = p6[0]; var setShowLeaderboard = p6[1];
-  var p7 = useState(false);    var showSettings    = p7[0]; var setShowSettings    = p7[1];
-  var p8 = useState(72);       var activeSkill     = p8[0]; var setActiveSkill     = p8[1];
+  var p1 = useState(false);           var isPaused        = p1[0]; var setIsPaused        = p1[1];
+  var p2 = useState("turtle");        var savedLayout     = p2[0]; var setSavedLayout     = p2[1];
+  var p3 = useState(0);               var timerSecs       = p3[0]; var setTimerSecs       = p3[1];
+  var p4 = useState(false);           var timerRunning    = p4[0]; var setTimerRunning    = p4[1];
+  var p5 = useState(false);           var showMenu        = p5[0]; var setShowMenu        = p5[1];
+  var p6 = useState(false);           var showLeaderboard = p6[0]; var setShowLeaderboard = p6[1];
+  var p7 = useState(false);           var showSettings    = p7[0]; var setShowSettings    = p7[1];
+  var p8 = useState(72);              var activeSkill     = p8[0]; var setActiveSkill     = p8[1];
+  var p9 = useState(loadTheme());     var themeId         = p9[0]; var setThemeId         = p9[1];
 
+  var theme = getTheme(themeId);
   var timerRef = useRef(null);
   var isLandscape = useOrientation();
+
+  var handleThemeChange = useCallback(function(id) {
+    setThemeId(id);
+    saveTheme(id);
+  }, []);
 
   var handleSkillUpdate = useCallback(function(sk) { persistPlayer({ skillScore: sk }); }, [persistPlayer]);
 
@@ -114,20 +122,30 @@ export default function App() {
           mistakeId={game.mistakeId}
           glowIds={game.glowIds}
           onTileClick={game.handleTileClick}
+          theme={theme}
         />
       </div>
     </div>
   );
 
   return (
-    <div style={lay.root}>
-      <div style={lay.bg} />
-      <div style={lay.glow1} />
-      <div style={lay.glow2} />
+    <div style={{ width:"100%", height:"100%", overflow:"hidden", position:"relative", background:theme.bg }}>
+      <div style={{ position:"fixed", inset:0, background:theme.bg, zIndex:0, pointerEvents:"none" }} />
+      <div style={{ position:"fixed", top:"-20%", left:"-10%", width:"60%", height:"60%", background:"radial-gradient(ellipse," + theme.bgGlow1 + " 0%,transparent 70%)", zIndex:0, pointerEvents:"none" }} />
+      <div style={{ position:"fixed", bottom:"-20%", right:"-10%", width:"60%", height:"60%", background:"radial-gradient(ellipse," + theme.bgGlow2 + " 0%,transparent 70%)", zIndex:0, pointerEvents:"none" }} />
       <SyncIndicator status={syncStatus} />
 
       {showLeaderboard && <Leaderboard onClose={function() { setShowLeaderboard(false); }} />}
-      {showSettings    && <Settings displayName={player.displayName||"Speler"} skillScore={player.skillScore||50} onChangeName={updateDisplayName} onClose={function() { setShowSettings(false); }} />}
+      {showSettings && (
+        <Settings
+          displayName={player.displayName||"Speler"}
+          skillScore={player.skillScore||50}
+          onChangeName={updateDisplayName}
+          onClose={function() { setShowSettings(false); }}
+          currentTheme={themeId}
+          onThemeChange={handleThemeChange}
+        />
+      )}
 
       {(game.status === GAME_STATUS.MENU || showMenu) && !showLeaderboard && !showSettings && (
         <MainMenu
@@ -139,6 +157,7 @@ export default function App() {
           onChangeName={updateDisplayName}
           onLeaderboard={function() { setShowLeaderboard(true); }}
           onSettings={function()    { setShowSettings(true);    }}
+          theme={theme}
         />
       )}
 
@@ -151,17 +170,17 @@ export default function App() {
 
       {isPlaying && isLandscape && (
         <div style={lay.landscape}>
-          <HUD score={game.score} activeTiles={game.activeTiles.length} totalTiles={game.totalTiles} availPairs={game.availPairs} skillScore={activeSkill} timerDisplay={timerDisplay} onPause={handlePause} isLandscape={true} />
+          <HUD score={game.score} activeTiles={game.activeTiles.length} totalTiles={game.totalTiles} availPairs={game.availPairs} skillScore={activeSkill} timerDisplay={timerDisplay} onPause={handlePause} isLandscape={true} theme={theme} />
           {boardEl}
-          <ActionBar onHint={game.handleHint} onUndo={game.handleUndo} onShuffle={game.handleShuffle} canUndo={game.history.length>0} isLandscape={true} onPause={handlePause} />
+          <ActionBar onHint={game.handleHint} onUndo={game.handleUndo} onShuffle={game.handleShuffle} canUndo={game.history.length>0} isLandscape={true} onPause={handlePause} theme={theme} />
         </div>
       )}
 
       {isPlaying && !isLandscape && (
         <div style={lay.portrait}>
-          <HUD score={game.score} activeTiles={game.activeTiles.length} totalTiles={game.totalTiles} availPairs={game.availPairs} skillScore={activeSkill} timerDisplay={timerDisplay} onPause={handlePause} isLandscape={false} />
+          <HUD score={game.score} activeTiles={game.activeTiles.length} totalTiles={game.totalTiles} availPairs={game.availPairs} skillScore={activeSkill} timerDisplay={timerDisplay} onPause={handlePause} isLandscape={false} theme={theme} />
           {boardEl}
-          <ActionBar onHint={game.handleHint} onUndo={game.handleUndo} onShuffle={game.handleShuffle} canUndo={game.history.length>0} isLandscape={false} />
+          <ActionBar onHint={game.handleHint} onUndo={game.handleUndo} onShuffle={game.handleShuffle} canUndo={game.history.length>0} isLandscape={false} theme={theme} />
         </div>
       )}
 
@@ -173,12 +192,8 @@ export default function App() {
 }
 
 var lay = {
-  root:       { width:"100%", height:"100%", display:"flex", flexDirection:"column", overflow:"hidden", position:"relative", background:"#000" },
-  bg:         { position:"fixed", inset:0, background:"#000", zIndex:0, pointerEvents:"none" },
-  glow1:      { position:"fixed", top:"-20%", left:"-10%", width:"60%", height:"60%", background:"radial-gradient(ellipse,rgba(255,107,0,0.12) 0%,transparent 70%)", zIndex:0, pointerEvents:"none" },
-  glow2:      { position:"fixed", bottom:"-20%", right:"-10%", width:"60%", height:"60%", background:"radial-gradient(ellipse,rgba(0,229,255,0.08) 0%,transparent 70%)", zIndex:0, pointerEvents:"none" },
-  portrait:   { display:"flex", flexDirection:"column", height:"100%", position:"relative", zIndex:1 },
-  landscape:  { display:"flex", flexDirection:"row", height:"100%", position:"relative", zIndex:1, maxWidth:"96%", margin:"0 auto" },
-  boardArea:  { flex:1, minHeight:0, position:"relative", zIndex:1 },
+  portrait:   { position:"absolute", inset:0, display:"flex", flexDirection:"column", zIndex:1 },
+  landscape:  { position:"absolute", inset:0, display:"flex", flexDirection:"row", zIndex:1 },
+  boardArea:  { flex:1, minHeight:0, minWidth:0, position:"relative", zIndex:1 },
   boardScroll:{ width:"100%", height:"100%", overflowX:"auto", overflowY:"auto", WebkitOverflowScrolling:"touch", display:"flex", alignItems:"center", justifyContent:"center", padding:"8px" },
 };
