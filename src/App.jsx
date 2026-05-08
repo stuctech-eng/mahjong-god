@@ -122,7 +122,7 @@ export default function App() {
           mistakeId={game.mistakeId}
           glowIds={game.glowIds}
           onTileClick={game.handleTileClick}
-          theme={theme}
+         
         />
       </div>
     </div>
@@ -157,7 +157,7 @@ export default function App() {
           onChangeName={updateDisplayName}
           onLeaderboard={function() { setShowLeaderboard(true); }}
           onSettings={function()    { setShowSettings(true);    }}
-          theme={theme}
+         
         />
       )}
 
@@ -170,17 +170,17 @@ export default function App() {
 
       {isPlaying && isLandscape && (
         <div style={lay.landscape}>
-          <HUD score={game.score} activeTiles={game.activeTiles.length} totalTiles={game.totalTiles} availPairs={game.availPairs} skillScore={activeSkill} timerDisplay={timerDisplay} onPause={handlePause} isLandscape={true} theme={theme} />
+          <HUD score={game.score} activeTiles={game.activeTiles.length} totalTiles={game.totalTiles} availPairs={game.availPairs} skillScore={activeSkill} timerDisplay={timerDisplay} onPause={handlePause} isLandscape={true} />
           {boardEl}
-          <ActionBar onHint={game.handleHint} onUndo={game.handleUndo} onShuffle={game.handleShuffle} canUndo={game.history.length>0} isLandscape={true} onPause={handlePause} theme={theme} />
+          <ActionBar onHint={game.handleHint} onUndo={game.handleUndo} onShuffle={game.handleShuffle} canUndo={game.history.length>0} isLandscape={true} onPause={handlePause} />
         </div>
       )}
 
       {isPlaying && !isLandscape && (
         <div style={lay.portrait}>
-          <HUD score={game.score} activeTiles={game.activeTiles.length} totalTiles={game.totalTiles} availPairs={game.availPairs} skillScore={activeSkill} timerDisplay={timerDisplay} onPause={handlePause} isLandscape={false} theme={theme} />
+          <HUD score={game.score} activeTiles={game.activeTiles.length} totalTiles={game.totalTiles} availPairs={game.availPairs} skillScore={activeSkill} timerDisplay={timerDisplay} onPause={handlePause} isLandscape={false} />
           {boardEl}
-          <ActionBar onHint={game.handleHint} onUndo={game.handleUndo} onShuffle={game.handleShuffle} canUndo={game.history.length>0} isLandscape={false} theme={theme} />
+          <ActionBar onHint={game.handleHint} onUndo={game.handleUndo} onShuffle={game.handleShuffle} canUndo={game.history.length>0} isLandscape={false} />
         </div>
       )}
 
