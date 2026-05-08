@@ -14,7 +14,7 @@ export function Settings({ displayName, skillScore, onChangeName, onClose, curre
   };
 
   return (
-    <div style={Object.assign({}, s.root, { background: THEMES[currentTheme] ? THEMES[currentTheme].bg : "#000" })}>
+    <div style={s.root}>
       <div style={s.g1} /><div style={s.g2} />
       <div style={s.inner}>
         <div style={s.header}>
@@ -23,7 +23,7 @@ export function Settings({ displayName, skillScore, onChangeName, onClose, curre
         </div>
 
         <div style={s.section}>
-          <div style={s.sectionTitle}>THEMA</div>
+          <div style={s.sectionTitle}>ACHTERGROND</div>
           <div style={s.themeGrid}>
             {THEME_LIST.map(function(tid) {
               var t = THEMES[tid];
@@ -33,25 +33,21 @@ export function Settings({ displayName, skillScore, onChangeName, onClose, curre
                   key={tid}
                   onClick={function() { onThemeChange(tid); }}
                   style={{
-                    background:  t.bg,
-                    border:      active ? "3px solid " + t.accent1 : "2px solid rgba(255,255,255,0.15)",
+                    background:   "linear-gradient(135deg," + t.bg + "," + t.bg2 + ")",
+                    border:       active ? "3px solid #ff6b00" : "2px solid rgba(255,255,255,0.15)",
                     borderRadius: 14,
-                    padding:     "14px 8px",
-                    cursor:      "pointer",
-                    display:     "flex",
+                    padding:      "16px 8px",
+                    cursor:       "pointer",
+                    display:      "flex",
                     flexDirection:"column",
-                    alignItems:  "center",
-                    gap:         8,
-                    flex:        1,
-                    transition:  "all 0.15s",
+                    alignItems:   "center",
+                    gap:          8,
+                    flex:         1,
                   }}
                 >
-                  <div style={{ display:"flex", gap:4 }}>
-                    <div style={{ width:16, height:20, background:t.tileFree, border:"2px solid "+t.tileBorder, borderRadius:3 }} />
-                    <div style={{ width:16, height:20, background:t.tileFree, border:"2px solid "+t.tileBorder, borderRadius:3 }} />
-                  </div>
-                  <div style={{ fontSize:10, fontWeight:700, color:t.accent1, letterSpacing:1 }}>{t.name}</div>
-                  {active && <div style={{ width:8, height:8, borderRadius:4, background:t.accent1 }} />}
+                  <div style={{ width:24, height:24, borderRadius:12, background:"linear-gradient(135deg," + t.glow1.replace("rgba","rgba").replace("0.","0.8,").replace(",0.","") + "," + t.glow2 + ")" }} />
+                  <div style={{ fontSize:10, fontWeight:700, color:"#fff", letterSpacing:1 }}>{t.name}</div>
+                  {active && <div style={{ width:6, height:6, borderRadius:3, background:"#ff6b00" }} />}
                 </button>
               );
             })}
@@ -101,7 +97,7 @@ export function Settings({ displayName, skillScore, onChangeName, onClose, curre
 }
 
 var s = {
-  root:        { position:"fixed", inset:0, zIndex:200, display:"flex", alignItems:"center", justifyContent:"center", overflow:"auto" },
+  root:        { position:"fixed", inset:0, background:"#0d1117", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center", overflow:"auto" },
   g1:          { position:"fixed", top:"-20%", left:"-10%", width:"70%", height:"70%", background:"radial-gradient(ellipse,rgba(255,107,0,0.1) 0%,transparent 70%)", pointerEvents:"none" },
   g2:          { position:"fixed", bottom:"-20%", right:"-10%", width:"70%", height:"70%", background:"radial-gradient(ellipse,rgba(0,229,255,0.07) 0%,transparent 70%)", pointerEvents:"none" },
   inner:       { position:"relative", zIndex:1, width:"100%", maxWidth:400, padding:"env(safe-area-inset-top,24px) 20px env(safe-area-inset-bottom,24px)", display:"flex", flexDirection:"column", gap:16 },
