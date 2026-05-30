@@ -1,59 +1,58 @@
-import { analyzeBoardQuality } from "./Solver.js";
+import { getFreePairs } from "./TileLogic.js";
 
-var TILE_DEFS = [
-  {suit:"char",value:1},{suit:"char",value:2},{suit:"char",value:3},{suit:"char",value:4},{suit:"char",value:5},
-  {suit:"char",value:6},{suit:"char",value:7},{suit:"char",value:8},{suit:"char",value:9},
-  {suit:"bam", value:1},{suit:"bam", value:2},{suit:"bam", value:3},{suit:"bam", value:4},{suit:"bam", value:5},
-  {suit:"bam", value:6},{suit:"bam", value:7},{suit:"bam", value:8},{suit:"bam", value:9},
-  {suit:"circ",value:1},{suit:"circ",value:2},{suit:"circ",value:3},{suit:"circ",value:4},{suit:"circ",value:5},
-  {suit:"circ",value:6},{suit:"circ",value:7},{suit:"circ",value:8},{suit:"circ",value:9},
-  {suit:"wind",  value:1},{suit:"wind",  value:2},{suit:"wind",  value:3},{suit:"wind",  value:4},
-  {suit:"dragon",value:1},{suit:"dragon",value:2},{suit:"dragon",value:3},
-  {suit:"flower",value:1},{suit:"flower",value:2},{suit:"flower",value:3},{suit:"flower",value:4},
-  {suit:"season",value:1},{suit:"season",value:2},{suit:"season",value:3},{suit:"season",value:4},
-];
+var DEFS = [];
+var suits = ["char","bam","circ"];
+var s, v, i;
+for (s=0;s<suits.length;s++) {
+  for (v=1;v<=9;v++) DEFS.push({ suit:suits[s], value:v });
+}
+for (v=1;v<=4;v++) DEFS.push({ suit:"wind", value:v });
+for (v=1;v<=3;v++) DEFS.push({ suit:"dragon", value:v });
+for (v=1;v<=4;v++) DEFS.push({ suit:"flower", value:v });
+for (v=1;v<=4;v++) DEFS.push({ suit:"season", value:v });
 
 function buildPool() {
   var pool = [];
-  TILE_DEFS.forEach(function(def) {
-    var copies = (def.suit === "flower" || def.suit === "season") ? 1 : 4;
-    for (var i = 0; i < copies; i++) pool.push(Object.assign({}, def));
-  });
+  for (i=0;i<DEFS.length;i++) {
+    var d = DEFS[i];
+    var n = (d.suit==="flower"||d.suit==="season") ? 1 : 4;
+    var j;
+    for (j=0;j<n;j++) pool.push({ suit:d.suit, value:d.value });
+  }
   return pool;
 }
 
 function shuffle(arr) {
-  for (var i = arr.length - 1; i > 0; i--) {
-    var j = Math.floor(Math.random() * (i + 1));
-    var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+  var i, j, t;
+  for (i=arr.length-1;i>0;i--) {
+    j = Math.floor(Math.random()*(i+1));
+    t=arr[i]; arr[i]=arr[j]; arr[j]=t;
   }
   return arr;
 }
 
-function buildTiles(positions) {
+function build(positions) {
   var pool = shuffle(buildPool());
   return positions.map(function(pos, i) {
     return {
-      id: i, layer: pos.layer, row: pos.row, col: pos.col,
-      suit: pool[i].suit, value: pool[i].value,
-      removed: false,
+      id:pos.layer*10000+pos.row*100+pos.col,
+      idx:i,
+      layer:pos.layer, row:pos.row, col:pos.col,
+      suit:pool[i].suit, value:pool[i].value,
+      removed:false,
     };
   });
 }
 
-export function generateBoard(positions, skillScore) {
-  skillScore = skillScore || 50;
+export function generateBoard(positions) {
   var best = null;
-  var bestScore = -Infinity;
-  for (var attempt = 0; attempt < 6; attempt++) {
-    var tiles    = buildTiles(positions);
-    var analysis = analyzeBoardQuality(tiles);
-    if (!analysis.solvable) continue;
-    var score;
-    if (skillScore < 35)      score = analysis.branchingFactor * 2 - analysis.deadlockRisk * 30;
-    else if (skillScore > 65) score = analysis.branchingFactor * 0.5 + analysis.deadlockRisk * 15;
-    else                      score = analysis.branchingFactor - analysis.deadlockRisk * 15;
-    if (score > bestScore) { bestScore = score; best = tiles; }
+  var attempt;
+  for (attempt=0;attempt<8;attempt++) {
+    var tiles = build(positions);
+    var pairs = getFreePairs(tiles);
+    if (pairs.length > 0) {
+      if (!best || pairs.length > getFreePairs(best).length) best = tiles;
+    }
   }
-  return best || buildTiles(positions);
+  return best || build(positions);
 }

@@ -2,7 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, serverTimestamp } from "firebase/firestore";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "firebase/auth";
 
-var firebaseConfig = {
+var cfg = {
   apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID,
@@ -11,49 +11,42 @@ var firebaseConfig = {
   appId:             import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-var app  = initializeApp(firebaseConfig);
+var app  = initializeApp(cfg);
 export var db   = getFirestore(app);
 export var auth = getAuth(app);
 
-export async function ensureAnonymousAuth() {
+export async function ensureAuth() {
   return new Promise(function(resolve) {
     var unsub = onAuthStateChanged(auth, async function(user) {
       unsub();
-      if (user) {
-        resolve(user);
-      } else {
-        try {
-          var cred = await signInAnonymously(auth);
-          resolve(cred.user);
-        } catch (err) {
-          resolve(null);
-        }
-      }
+      if (user) { resolve(user); return; }
+      try { var c = await signInAnonymously(auth); resolve(c.user); }
+      catch(e) { resolve(null); }
     });
   });
 }
 
-export async function loadPlayerData(uid) {
+export async function loadPlayer(uid) {
   try {
-    var ref  = doc(db, "players", uid);
-    var snap = await getDoc(ref);
+    var snap = await getDoc(doc(db, "players", uid));
     return snap.exists() ? snap.data() : null;
-  } catch (err) { return null; }
+  } catch(e) { return null; }
 }
 
-export async function savePlayerData(uid, data) {
+export async function savePlayer(uid, data) {
   try {
-    var ref = doc(db, "players", uid);
-    await setDoc(ref, Object.assign({}, data, { updatedAt: serverTimestamp() }), { merge: true });
-  } catch (err) {}
+    await setDoc(doc(db, "players", uid),
+      Object.assign({}, data, { updatedAt: serverTimestamp() }),
+      { merge: true }
+    );
+  } catch(e) {}
 }
 
-export async function saveSession(uid, sessionData) {
+export async function saveSession(uid, session) {
   try {
-    var ref = doc(db, "players", uid);
-    await updateDoc(ref, {
-      sessions:     arrayUnion(Object.assign({}, sessionData, { savedAt: new Date().toISOString() })),
+    await updateDoc(doc(db, "players", uid), {
+      sessions:     arrayUnion(Object.assign({}, session, { at: new Date().toISOString() })),
       lastPlayedAt: serverTimestamp(),
     });
-  } catch (err) {}
+  } catch(e) {}
 }

@@ -1,118 +1,180 @@
 import { useState } from "react";
 import { LAYOUTS } from "../data/layouts.js";
-import { getDifficultyInfo } from "../analytics/SkillScore.js";
+import { getDiff } from "../systems/SkillScore.js";
+import { THEMES, THEME_LIST } from "../systems/Themes.js";
 
-var VERSION = "1.0.0";
+var VERSION = "2.0.0";
 var DIFFS = [
   { id:"easy",   label:"Easy",   color:"#4ade80" },
   { id:"medium", label:"Medium", color:"#facc15" },
   { id:"hard",   label:"Hard",   color:"#fb923c" },
   { id:"god",    label:"GOD",    color:"#f87171" },
 ];
-var startBg  = "linear-gradient(135deg,#ff6b00,#cc4400)";
-var lostBg   = "linear-gradient(135deg,#dc2626,#7f1d1d)";
+var startGrad = "linear-gradient(135deg,#ffd700,#cc8800)";
+var lostGrad  = "linear-gradient(135deg,#dc2626,#7f1d1d)";
 
-export function MainMenu({ skillScore, highScore, displayName, onStart, onContinue, onChangeName, onLeaderboard, onSettings }) {
-  var ls = useState("turtle"); var layout     = ls[0]; var setLayout     = ls[1];
-  var ds = useState("hard");   var difficulty = ds[0]; var setDifficulty = ds[1];
-  var es = useState(false);    var editing    = es[0]; var setEditing    = es[1];
-  var ns = useState(displayName); var nameInput = ns[0]; var setNameInput  = ns[1];
-  var diff = getDifficultyInfo(skillScore);
+export function MainMenu({ skillScore, highScore, displayName, onStart, onContinue, onChangeName, onLeaderboard, onSettings, theme }) {
+  var ls = useState("turtle"); var layout = ls[0]; var setLayout = ls[1];
+  var ds = useState("hard");   var diff   = ds[0]; var setDiff   = ds[1];
+  var es = useState(false);    var edit   = es[0]; var setEdit   = es[1];
+  var ns = useState(displayName); var name = ns[0]; var setName  = ns[1];
+
+  var bg = theme ? theme.bg : "#0d1117";
 
   return (
-    <div style={s.root}>
-      <div style={s.g1} /><div style={s.g2} />
-      <div style={s.inner}>
-        <div style={s.logoWrap}>
-          <div style={s.logoIcon}>M</div>
-          <div style={s.logoTitle}>MajGOD</div>
-          <div style={s.logoSub}>MAHJONG SOLITAIRE</div>
-          <div style={s.version}>v{VERSION}</div>
+    <div style={{ position:"fixed", inset:0, background:bg,
+      display:"flex", alignItems:"center", justifyContent:"center", overflow:"auto" }}>
+      <div style={{ position:"fixed", top:"-20%", left:"-10%", width:"60%", height:"60%",
+        background:"radial-gradient(ellipse," + (theme ? theme.glow1 : "rgba(255,215,0,0.1)") + " 0%,transparent 70%)",
+        pointerEvents:"none" }} />
+      <div style={{ position:"relative", zIndex:1, width:"100%", maxWidth:380,
+        padding:"env(safe-area-inset-top,24px) 24px env(safe-area-inset-bottom,24px)",
+        display:"flex", flexDirection:"column", gap:12 }}>
+
+        <div style={{ textAlign:"center", marginBottom:4 }}>
+          <div style={{ fontSize:44, fontWeight:900, letterSpacing:2,
+            background:"linear-gradient(135deg,#ffd700,#ff8c00)",
+            WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>
+            MajGOD
+          </div>
+          <div style={{ fontSize:10, letterSpacing:6, color:"rgba(255,255,255,0.3)", marginTop:4 }}>
+            MAHJONG SOLITAIRE
+          </div>
+          <div style={{ fontSize:9, color:"rgba(255,255,255,0.15)", marginTop:2 }}>v{VERSION}</div>
         </div>
-        <div style={s.playerRow}>
-          {editing ? (
-            <div style={s.editRow}>
-              <input style={s.input} value={nameInput} onChange={function(e){setNameInput(e.target.value);}} maxLength={20} autoFocus />
-              <button style={s.saveBtn} onClick={function(){if(onChangeName)onChangeName(nameInput);setEditing(false);}}>OK</button>
+
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between",
+          background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.08)",
+          borderRadius:14, padding:"12px 16px" }}>
+          {edit ? (
+            <div style={{ display:"flex", gap:6, flex:1 }}>
+              <input value={name} onChange={function(e){setName(e.target.value);}} maxLength={20}
+                autoFocus style={{ flex:1, background:"rgba(255,255,255,0.07)",
+                  border:"1px solid #ffd700", borderRadius:8, color:"#fff",
+                  fontSize:14, padding:"6px 10px", outline:"none", fontFamily:"inherit" }} />
+              <button onClick={function(){if(onChangeName)onChangeName(name);setEdit(false);}}
+                style={{ background:"#ffd700", border:"none", borderRadius:8,
+                  color:"#000", fontSize:13, fontWeight:700, padding:"6px 12px",
+                  cursor:"pointer", fontFamily:"inherit" }}>OK</button>
             </div>
           ) : (
-            <div style={s.playerInfo}>
-              <span style={s.playerLabel}>SPELER</span>
-              <div style={s.playerNameRow}>
-                <span style={s.playerName}>{displayName}</span>
-                <button style={s.editBtn} onClick={function(){setEditing(true);}}>Wijzigen</button>
+            <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
+              <div style={{ fontSize:8, color:"rgba(255,255,255,0.3)", letterSpacing:2 }}>SPELER</div>
+              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                <span style={{ fontSize:15, fontWeight:700, color:"#fff" }}>{displayName}</span>
+                <button onClick={function(){setEdit(true);}}
+                  style={{ background:"transparent", border:"1px solid rgba(255,215,0,0.3)",
+                    borderRadius:6, color:"#ffd700", fontSize:10, padding:"2px 8px",
+                    cursor:"pointer", fontFamily:"inherit" }}>Wijzigen</button>
               </div>
             </div>
           )}
-          <div style={s.highScore}>
-            <span style={s.highScoreLabel}>BEST</span>
-            <span style={s.highScoreVal}>{highScore.toLocaleString()}</span>
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:2 }}>
+            <div style={{ fontSize:8, color:"rgba(255,255,255,0.3)", letterSpacing:2 }}>BEST</div>
+            <div style={{ fontSize:20, fontWeight:900, color:"#ffd700" }}>{highScore.toLocaleString()}</div>
           </div>
         </div>
-        <button style={s.startBtn} onClick={function(){onStart(layout,difficulty);}}>
-          <span style={s.startBtnText}>START</span>
+
+        <button onClick={function(){onStart(layout,diff);}} style={{ background:startGrad,
+          border:"none", borderRadius:16, padding:"17px 0", cursor:"pointer",
+          boxShadow:"0 0 30px rgba(255,215,0,0.3)" }}>
+          <span style={{ fontSize:17, fontWeight:900, color:"#000", letterSpacing:4 }}>START</span>
         </button>
-        <button style={s.continueBtn} onClick={onContinue}>DOORGAAN</button>
-        <div style={s.sectionLabel}>MOEILIJKHEID</div>
-        <div style={s.diffRow}>
+
+        <button onClick={onContinue} style={{ background:"rgba(255,255,255,0.05)",
+          border:"1px solid rgba(255,255,255,0.1)", borderRadius:14, padding:"13px 0",
+          fontSize:12, fontWeight:700, color:"rgba(255,255,255,0.5)",
+          letterSpacing:2, cursor:"pointer", fontFamily:"inherit" }}>DOORGAAN</button>
+
+        <div style={{ fontSize:9, color:"rgba(255,255,255,0.25)", letterSpacing:3 }}>MOEILIJKHEID</div>
+        <div style={{ display:"flex", gap:8 }}>
           {DIFFS.map(function(d) {
-            var active = difficulty === d.id;
+            var active = diff === d.id;
             return (
-              <button key={d.id} onClick={function(){setDifficulty(d.id);}} style={Object.assign({},s.diffBtn,{
-                background:  active ? "rgba(255,107,0,0.15)" : "rgba(255,255,255,0.04)",
-                borderColor: active ? d.color : "rgba(255,255,255,0.08)",
-                color:       active ? d.color : "rgba(255,255,255,0.4)",
-              })}>
-                {d.label}
-              </button>
+              <button key={d.id} onClick={function(){setDiff(d.id);}} style={{
+                flex:1, border:"1.5px solid " + (active ? d.color : "rgba(255,255,255,0.08)"),
+                borderRadius:10, padding:"10px 0", fontSize:11, fontWeight:700,
+                letterSpacing:1, cursor:"pointer", fontFamily:"inherit",
+                background: active ? "rgba(255,215,0,0.1)" : "rgba(255,255,255,0.04)",
+                color: active ? d.color : "rgba(255,255,255,0.4)",
+              }}>{d.label}</button>
             );
           })}
         </div>
-        <div style={s.sectionLabel}>LAYOUT</div>
-        <div style={s.layoutRow}>
+
+        <div style={{ fontSize:9, color:"rgba(255,255,255,0.25)", letterSpacing:3 }}>LAYOUT</div>
+        <div style={{ display:"flex", gap:10 }}>
           {Object.values(LAYOUTS).map(function(l) {
             var active = layout === l.id;
             return (
-              <button key={l.id} onClick={function(){setLayout(l.id);}} style={Object.assign({},s.layoutBtn,{
-                background:  active ? "rgba(0,229,255,0.1)"  : "rgba(255,255,255,0.04)",
-                borderColor: active ? "#00e5ff" : "rgba(255,255,255,0.08)",
-              })}>
-                <span style={{ fontSize:14, fontWeight:700, color: active ? "#00e5ff" : "rgba(255,255,255,0.5)" }}>{l.name}</span>
-                <span style={{ fontSize:9, color:"rgba(255,255,255,0.25)", marginTop:2 }}>{l.difficulty}</span>
+              <button key={l.id} onClick={function(){setLayout(l.id);}} style={{
+                flex:1, border:"1.5px solid " + (active ? "#ffd700" : "rgba(255,255,255,0.08)"),
+                borderRadius:12, padding:"12px 8px", cursor:"pointer",
+                display:"flex", flexDirection:"column", alignItems:"center", gap:4,
+                fontFamily:"inherit",
+                background: active ? "rgba(255,215,0,0.1)" : "rgba(255,255,255,0.04)",
+              }}>
+                <span style={{ fontSize:13, fontWeight:700, color: active ? "#ffd700" : "rgba(255,255,255,0.5)" }}>{l.name}</span>
+                <span style={{ fontSize:9, color:"rgba(255,255,255,0.25)" }}>{l.difficulty}</span>
               </button>
             );
           })}
         </div>
-        <div style={s.bottomRow}>
-          <button style={s.bottomBtn} onClick={onSettings}>
-            <span style={s.bottomIcon}>*</span><span>SETTINGS</span>
-          </button>
-          <button style={s.bottomBtn} onClick={onLeaderboard}>
-            <span style={s.bottomIcon}>T</span><span>LEADERBOARD</span>
-          </button>
+
+        <div style={{ display:"flex", gap:10 }}>
+          <MBtn icon="*" label="SETTINGS"    onClick={onSettings} />
+          <MBtn icon="T" label="LEADERBOARD" onClick={onLeaderboard} />
         </div>
+
       </div>
     </div>
   );
 }
 
+function MBtn({ icon, label, onClick }) {
+  return (
+    <button onClick={onClick} style={{ flex:1, background:"rgba(255,255,255,0.04)",
+      border:"1px solid rgba(255,255,255,0.08)", borderRadius:12, padding:"12px 8px",
+      cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center",
+      gap:4, fontSize:9, fontWeight:700, color:"rgba(255,255,255,0.35)",
+      letterSpacing:1, fontFamily:"inherit" }}>
+      <span style={{ fontSize:18, color:"rgba(255,255,255,0.15)" }}>{icon}</span>
+      {label}
+    </button>
+  );
+}
+
 export function WinScreen({ score, summary, timerSecs, medal, onRestart, onMenu }) {
   return (
-    <div style={s.overlayRoot}>
-      <div style={s.g1} />
-      <div style={s.resultCard}>
-        <div style={{ fontSize:48, fontWeight:900, color:"#ff6b00", marginBottom:4 }}>WIN!</div>
-        <div style={{ fontSize:11, letterSpacing:4, color:"rgba(255,255,255,0.3)", marginBottom:16 }}>GEWONNEN</div>
-        {medal && <div style={Object.assign({},s.medalBadge,{borderColor:medal.color,color:medal.color})}>{medal.label}</div>}
-        <div style={s.resultScore}>{score.toLocaleString()}</div>
-        <div style={s.summaryGrid}>
-          <SI label="Zetten"  value={summary.moves     || 0} color="#ff6b00" />
+    <div style={{ position:"fixed", inset:0, background:"#000",
+      display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <div style={{ background:"rgba(12,12,20,0.98)", border:"1px solid rgba(255,215,0,0.2)",
+        borderRadius:24, padding:"32px 28px", textAlign:"center", maxWidth:320, width:"88%",
+        color:"#fff" }}>
+        <div style={{ fontSize:44, fontWeight:900, color:"#ffd700" }}>WIN!</div>
+        {medal && <div style={{ border:"2px solid "+medal.color, borderRadius:20,
+          padding:"3px 18px", fontSize:12, fontWeight:900, color:medal.color,
+          letterSpacing:3, display:"inline-block", marginBottom:10 }}>{medal.label}</div>}
+        <div style={{ fontSize:36, fontWeight:900, color:"#ffd700", margin:"8px 0 16px" }}>
+          {score.toLocaleString()}
+        </div>
+        <div style={{ display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap", marginBottom:20 }}>
+          <SI label="Zetten"  value={summary.moves     || 0} color="#ffd700" />
           <SI label="Fouten"  value={summary.mistakes  || 0} color="#f87171" />
           <SI label="Hints"   value={summary.hintsUsed || 0} color="#00e5ff" />
-          <SI label="Tijd"    value={(summary.duration || 0) + "s"} color="#fff" />
+          <SI label="Tijd"    value={(summary.duration || 0)+"s"} color="#fff" />
         </div>
-        <button style={s.startBtn}    onClick={onRestart}><span style={s.startBtnText}>OPNIEUW</span></button>
-        <button style={s.continueBtn} onClick={onMenu}>STARTSCHERM</button>
+        <button onClick={onRestart} style={{ background:startGrad, border:"none", borderRadius:14,
+          padding:"14px 0", fontSize:14, fontWeight:900, color:"#000",
+          letterSpacing:3, cursor:"pointer", width:"100%", fontFamily:"inherit", marginBottom:8 }}>
+          OPNIEUW
+        </button>
+        <button onClick={onMenu} style={{ background:"rgba(255,255,255,0.05)",
+          border:"1px solid rgba(255,255,255,0.1)", borderRadius:14, padding:"13px 0",
+          fontSize:12, fontWeight:700, color:"rgba(255,255,255,0.5)",
+          letterSpacing:2, cursor:"pointer", width:"100%", fontFamily:"inherit" }}>
+          STARTSCHERM
+        </button>
       </div>
     </div>
   );
@@ -120,18 +182,29 @@ export function WinScreen({ score, summary, timerSecs, medal, onRestart, onMenu 
 
 export function LostScreen({ score, summary, onRestart, onMenu }) {
   return (
-    <div style={s.overlayRoot}>
-      <div style={s.g2} />
-      <div style={s.resultCard}>
-        <div style={{ fontSize:48, fontWeight:900, color:"#f87171", marginBottom:4 }}>HELAAS</div>
-        <div style={{ fontSize:11, letterSpacing:4, color:"rgba(255,255,255,0.3)", marginBottom:16 }}>GEEN ZETTEN MEER</div>
-        <div style={Object.assign({},s.resultScore,{color:"#f87171"})}>{score.toLocaleString()}</div>
-        <div style={s.summaryGrid}>
-          <SI label="Zetten"     value={summary.moves     || 0} color="#ff6b00" />
-          <SI label="Tiles over" value={summary.tilesLeft || 0} color="#f87171" />
+    <div style={{ position:"fixed", inset:0, background:"#000",
+      display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <div style={{ background:"rgba(12,12,20,0.98)", border:"1px solid rgba(220,38,38,0.2)",
+        borderRadius:24, padding:"32px 28px", textAlign:"center", maxWidth:320, width:"88%",
+        color:"#fff" }}>
+        <div style={{ fontSize:44, fontWeight:900, color:"#f87171" }}>HELAAS</div>
+        <div style={{ fontSize:11, color:"rgba(255,255,255,0.3)", letterSpacing:4, marginBottom:12 }}>
+          GEEN ZETTEN MEER
         </div>
-        <button style={Object.assign({},s.startBtn,{background:lostBg})} onClick={onRestart}><span style={s.startBtnText}>OPNIEUW</span></button>
-        <button style={s.continueBtn} onClick={onMenu}>STARTSCHERM</button>
+        <div style={{ fontSize:36, fontWeight:900, color:"#f87171", marginBottom:16 }}>
+          {score.toLocaleString()}
+        </div>
+        <button onClick={onRestart} style={{ background:lostGrad, border:"none", borderRadius:14,
+          padding:"14px 0", fontSize:14, fontWeight:900, color:"#fff",
+          letterSpacing:3, cursor:"pointer", width:"100%", fontFamily:"inherit", marginBottom:8 }}>
+          OPNIEUW
+        </button>
+        <button onClick={onMenu} style={{ background:"rgba(255,255,255,0.05)",
+          border:"1px solid rgba(255,255,255,0.1)", borderRadius:14, padding:"13px 0",
+          fontSize:12, fontWeight:700, color:"rgba(255,255,255,0.5)",
+          letterSpacing:2, cursor:"pointer", width:"100%", fontFamily:"inherit" }}>
+          STARTSCHERM
+        </button>
       </div>
     </div>
   );
@@ -139,50 +212,11 @@ export function LostScreen({ score, summary, onRestart, onMenu }) {
 
 function SI({ label, value, color }) {
   return (
-    <div style={s.siItem}>
-      <span style={{ fontSize:20, fontWeight:900, color:color }}>{value}</span>
-      <span style={{ fontSize:9, color:"rgba(255,255,255,0.3)", letterSpacing:1, marginTop:2 }}>{label}</span>
+    <div style={{ display:"flex", flexDirection:"column", alignItems:"center",
+      background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.07)",
+      borderRadius:10, padding:"8px 12px", minWidth:60 }}>
+      <span style={{ fontSize:18, fontWeight:900, color:color }}>{value}</span>
+      <span style={{ fontSize:9, color:"rgba(255,255,255,0.3)", marginTop:2 }}>{label}</span>
     </div>
   );
 }
-
-var s = {
-  root:          { position:"fixed", inset:0, background:"#000", display:"flex", alignItems:"center", justifyContent:"center", overflow:"auto" },
-  overlayRoot:   { position:"fixed", inset:0, background:"#000", display:"flex", alignItems:"center", justifyContent:"center" },
-  g1:            { position:"fixed", top:"-20%", left:"-10%", width:"70%", height:"70%", background:"radial-gradient(ellipse,rgba(255,107,0,0.12) 0%,transparent 70%)", pointerEvents:"none", zIndex:0 },
-  g2:            { position:"fixed", bottom:"-20%", right:"-10%", width:"70%", height:"70%", background:"radial-gradient(ellipse,rgba(0,229,255,0.08) 0%,transparent 70%)", pointerEvents:"none", zIndex:0 },
-  inner:         { position:"relative", zIndex:1, width:"100%", maxWidth:380, padding:"env(safe-area-inset-top,24px) 24px env(safe-area-inset-bottom,24px)", display:"flex", flexDirection:"column", gap:12 },
-  logoWrap:      { textAlign:"center", marginBottom:4 },
-  logoIcon:      { fontSize:40, fontWeight:900, color:"#ff6b00", lineHeight:1, marginBottom:4, textShadow:"0 0 30px rgba(255,107,0,0.6)" },
-  logoTitle:     { fontSize:48, fontWeight:900, letterSpacing:2, background:"linear-gradient(135deg,#ff6b00,#00e5ff)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", lineHeight:1 },
-  logoSub:       { fontSize:11, letterSpacing:6, color:"rgba(255,255,255,0.3)", marginTop:6 },
-  version:       { fontSize:9, color:"rgba(255,255,255,0.15)", letterSpacing:2, marginTop:4 },
-  playerRow:     { display:"flex", alignItems:"center", justifyContent:"space-between", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:14, padding:"12px 16px" },
-  playerInfo:    { display:"flex", flexDirection:"column", gap:2 },
-  playerLabel:   { fontSize:8, color:"rgba(255,255,255,0.25)", letterSpacing:2 },
-  playerNameRow: { display:"flex", alignItems:"center", gap:8 },
-  playerName:    { fontSize:15, fontWeight:700, color:"#fff" },
-  editBtn:       { background:"transparent", border:"1px solid rgba(0,229,255,0.3)", borderRadius:6, color:"#00e5ff", fontSize:10, padding:"2px 8px", cursor:"pointer", fontFamily:"inherit" },
-  editRow:       { display:"flex", gap:6 },
-  input:         { flex:1, background:"rgba(255,255,255,0.06)", border:"1px solid #ff6b00", borderRadius:8, color:"#fff", fontSize:14, padding:"6px 10px", outline:"none", fontFamily:"inherit" },
-  saveBtn:       { background:"#ff6b00", border:"none", borderRadius:8, color:"#000", fontSize:13, fontWeight:700, padding:"6px 12px", cursor:"pointer", fontFamily:"inherit" },
-  highScore:     { display:"flex", flexDirection:"column", alignItems:"flex-end", gap:2 },
-  highScoreLabel:{ fontSize:8, color:"rgba(255,255,255,0.25)", letterSpacing:2 },
-  highScoreVal:  { fontSize:20, fontWeight:900, color:"#ff6b00" },
-  startBtn:      { background:startBg, border:"none", borderRadius:16, padding:"18px 0", cursor:"pointer", boxShadow:"0 0 40px rgba(255,107,0,0.4)" },
-  startBtnText:  { fontSize:18, fontWeight:900, color:"#000", letterSpacing:4 },
-  continueBtn:   { background:"rgba(255,255,255,0.04)", border:"1.5px solid rgba(255,255,255,0.1)", borderRadius:14, padding:"14px 0", fontSize:13, fontWeight:700, color:"rgba(255,255,255,0.5)", letterSpacing:2, cursor:"pointer", fontFamily:"inherit" },
-  sectionLabel:  { fontSize:9, color:"rgba(255,255,255,0.25)", letterSpacing:3, textTransform:"uppercase", marginBottom:-4 },
-  diffRow:       { display:"flex", gap:8 },
-  diffBtn:       { flex:1, border:"1.5px solid", borderRadius:10, padding:"10px 0", fontSize:11, fontWeight:700, letterSpacing:1, cursor:"pointer", fontFamily:"inherit", transition:"all 0.15s" },
-  layoutRow:     { display:"flex", gap:10 },
-  layoutBtn:     { flex:1, border:"1.5px solid", borderRadius:12, padding:"12px 8px", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:4, fontFamily:"inherit" },
-  bottomRow:     { display:"flex", gap:10 },
-  bottomBtn:     { flex:1, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:12, padding:"12px 8px", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:4, fontSize:9, fontWeight:700, color:"rgba(255,255,255,0.35)", letterSpacing:1, fontFamily:"inherit" },
-  bottomIcon:    { fontSize:18, color:"rgba(255,255,255,0.15)" },
-  resultCard:    { position:"relative", zIndex:1, background:"rgba(8,8,12,0.98)", border:"1px solid rgba(255,107,0,0.2)", borderRadius:24, padding:"36px 28px", textAlign:"center", maxWidth:340, width:"90%", color:"#fff" },
-  medalBadge:    { border:"2px solid", borderRadius:20, padding:"4px 20px", fontSize:13, fontWeight:900, letterSpacing:3, marginBottom:12, display:"inline-block" },
-  resultScore:   { fontSize:40, fontWeight:900, color:"#ff6b00", marginBottom:16 },
-  summaryGrid:   { display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap", marginBottom:20 },
-  siItem:        { display:"flex", flexDirection:"column", alignItems:"center", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:10, padding:"8px 14px", minWidth:64 },
-};

@@ -1,18 +1,20 @@
 import { useCallback, useMemo, useState, useEffect, useRef } from "react";
-import { useGameState, GAME_STATUS } from "./hooks/useGameState.js";
-import { usePersistence }            from "./hooks/usePersistence.js";
-import { buildScoreSummary }         from "./systems/Scoring.js";
-import { Board }                     from "./components/Board.jsx";
-import { HUD, ActionBar }            from "./components/HUD.jsx";
+import { useGameState, STATUS } from "./hooks/useGameState.js";
+import { usePersistence } from "./hooks/usePersistence.js";
+import { buildSummary } from "./systems/Scoring.js";
+import { Board } from "./components/Board.jsx";
+import { HUD, ActionBar } from "./components/HUD.jsx";
 import { MainMenu, WinScreen, LostScreen } from "./components/Menu.jsx";
-import { ComboPopup, FlowAlert, SyncIndicator, PauseMenu } from "./components/Overlays.jsx";
+import { ComboPopup, PauseMenu, SyncDot } from "./components/Overlays.jsx";
 import { Leaderboard } from "./components/Leaderboard.jsx";
-import { Settings }    from "./components/Settings.jsx";
+import { Settings } from "./components/Settings.jsx";
+import { Audio } from "./systems/Audio.js";
+import { getTheme, loadTheme, saveTheme } from "./systems/Themes.js";
 
-var DIFFICULTY_SCORES = { easy:15, medium:45, hard:72, god:92 };
+var DIFF_SCORES = { easy:15, medium:45, hard:72, god:92 };
 
 function useOrientation() {
-  var init = typeof window !== "undefined" ? window.innerWidth > window.innerHeight : false;
+  var init = window.innerWidth > window.innerHeight;
   var s = useState(init); var set = s[1];
   useEffect(function() {
     var h = function() { set(window.innerWidth > window.innerHeight); };
@@ -28,54 +30,52 @@ function useOrientation() {
 
 export default function App() {
   var pers = usePersistence();
-  var player = pers.player;
-  var syncStatus = pers.syncStatus;
+  var player        = pers.player;
+  var syncStatus    = pers.syncStatus;
   var persistPlayer = pers.persistPlayer;
-  var persistSession = pers.persistSession;
-  var updateDisplayName = pers.updateDisplayName;
+  var persistSession= pers.persistSession;
+  var updateName    = pers.updateName;
 
-  var p1 = useState(false);    var isPaused        = p1[0]; var setIsPaused        = p1[1];
-  var p2 = useState("turtle"); var savedLayout     = p2[0]; var setSavedLayout     = p2[1];
-  var p3 = useState(0);        var timerSecs       = p3[0]; var setTimerSecs       = p3[1];
-  var p4 = useState(false);    var timerRunning    = p4[0]; var setTimerRunning    = p4[1];
-  var p5 = useState(false);    var showMenu        = p5[0]; var setShowMenu        = p5[1];
-  var p6 = useState(false);    var showLeaderboard = p6[0]; var setShowLeaderboard = p6[1];
-  var p7 = useState(false);    var showSettings    = p7[0]; var setShowSettings    = p7[1];
-  var p8 = useState(72);       var activeSkill     = p8[0]; var setActiveSkill     = p8[1];
+  var a1 = useState(false);          var isPaused    = a1[0]; var setIsPaused    = a1[1];
+  var a2 = useState("turtle");       var savedLayout = a2[0]; var setSavedLayout = a2[1];
+  var a3 = useState(0);              var timerSecs   = a3[0]; var setTimerSecs   = a3[1];
+  var a4 = useState(false);          var timerOn     = a4[0]; var setTimerOn     = a4[1];
+  var a5 = useState(false);          var showMenu    = a5[0]; var setShowMenu    = a5[1];
+  var a6 = useState(false);          var showLB      = a6[0]; var setShowLB      = a6[1];
+  var a7 = useState(false);          var showSet     = a7[0]; var setShowSet     = a7[1];
+  var a8 = useState(72);             var skill       = a8[0]; var setSkill       = a8[1];
+  var a9 = useState(loadTheme());    var themeId     = a9[0]; var setThemeId     = a9[1];
 
+  var theme = getTheme(themeId);
   var timerRef = useRef(null);
-  var isLandscape = useOrientation();
+  var landscape = useOrientation();
 
-  var handleSkillUpdate = useCallback(function(sk) {
-    persistPlayer({ skillScore: sk });
-  }, [persistPlayer]);
+  var handleTheme = useCallback(function(id) {
+    setThemeId(id); saveTheme(id);
+  }, []);
 
-  var handleSessionEnd = useCallback(async function(snap, score, result) {
+  var handleSessionEnd = useCallback(async function(session, score, result) {
     var newHigh = Math.max(player.highScore || 0, score);
     persistPlayer({
       highScore:  newHigh,
       totalGames: (player.totalGames || 0) + 1,
       totalWins:  (player.totalWins  || 0) + (result === "win" ? 1 : 0),
     });
-    setTimerRunning(false);
-    await persistSession(snap, score, result);
+    setTimerOn(false);
+    await persistSession(session, score, result);
   }, [player, persistPlayer, persistSession]);
 
-  var game = useGameState({
-    skillScore:    activeSkill,
-    onSkillUpdate: handleSkillUpdate,
-    onSessionEnd:  handleSessionEnd,
-  });
+  var game = useGameState(skill, handleSessionEnd);
 
   var summary = useMemo(function() {
-    if (game.status === GAME_STATUS.WON || game.status === GAME_STATUS.LOST) {
-      return buildScoreSummary(game.score, game.engine ? game.engine.session : {}, game.tiles);
+    if (game.status === STATUS.WON || game.status === STATUS.LOST) {
+      return buildSummary(game.score, game.session, game.tiles);
     }
     return null;
   }, [game.status]);
 
   useEffect(function() {
-    if (timerRunning) {
+    if (timerOn) {
       timerRef.current = setInterval(function() {
         setTimerSecs(function(s) { return s + 1; });
       }, 1000);
@@ -83,213 +83,215 @@ export default function App() {
       clearInterval(timerRef.current);
     }
     return function() { clearInterval(timerRef.current); };
-  }, [timerRunning]);
+  }, [timerOn]);
 
-  var m  = String(Math.floor(timerSecs / 60)).padStart(2, "0");
-  var sc = String(timerSecs % 60).padStart(2, "0");
-  var timerDisplay = m + ":" + sc;
+  var mm  = String(Math.floor(timerSecs / 60)).padStart(2, "0");
+  var ss2 = String(timerSecs % 60).padStart(2, "0");
+  var timer = mm + ":" + ss2;
 
   var medal = null;
-  if      (timerSecs < 120) medal = { label: "GOLD",   color: "#fbbf24" };
-  else if (timerSecs < 240) medal = { label: "SILVER", color: "#94a3b8" };
-  else if (timerSecs < 360) medal = { label: "BRONZE", color: "#cd7c2f" };
+  if      (timerSecs < 120) medal = { label:"GOLD",   color:"#fbbf24" };
+  else if (timerSecs < 240) medal = { label:"SILVER", color:"#94a3b8" };
+  else if (timerSecs < 360) medal = { label:"BRONZE", color:"#cd7c2f" };
 
-  var handleStart = useCallback(function(lid, diff) {
-    var skill = DIFFICULTY_SCORES[diff] || 72;
-    setActiveSkill(skill);
+  var start = useCallback(function(lid, diff) {
+    Audio.unlock();
+    setSkill(DIFF_SCORES[diff] || 72);
     setSavedLayout(lid || "turtle");
     setTimerSecs(0);
-    setTimerRunning(true);
+    setTimerOn(true);
     setIsPaused(false);
     setShowMenu(false);
-    setShowLeaderboard(false);
-    setShowSettings(false);
+    setShowLB(false);
+    setShowSet(false);
     game.startGame(lid);
   }, [game]);
 
-  var handleContinue = useCallback(function() {
-    setTimerSecs(0);
-    setTimerRunning(true);
-    setIsPaused(false);
-    setShowMenu(false);
-    setShowLeaderboard(false);
-    setShowSettings(false);
+  var cont = useCallback(function() {
+    Audio.unlock();
+    setTimerSecs(0); setTimerOn(true); setIsPaused(false);
+    setShowMenu(false); setShowLB(false); setShowSet(false);
     game.startGame(savedLayout);
   }, [game, savedLayout]);
 
-  var handleRestart = useCallback(function() {
-    setTimerSecs(0);
-    setTimerRunning(true);
-    setIsPaused(false);
-    setShowMenu(false);
-    setShowLeaderboard(false);
-    setShowSettings(false);
+  var restart = useCallback(function() {
+    setTimerSecs(0); setTimerOn(true); setIsPaused(false);
+    setShowMenu(false); setShowLB(false); setShowSet(false);
     game.startGame(savedLayout);
   }, [game, savedLayout]);
 
-  var handlePause    = useCallback(function() { setIsPaused(true);  setTimerRunning(false); }, []);
-  var handleResume   = useCallback(function() { setIsPaused(false); setTimerRunning(true);  }, []);
-  var handleGoToMenu = useCallback(function() {
-    setIsPaused(false);
-    setTimerRunning(false);
-    setTimerSecs(0);
-    setShowMenu(true);
+  var pause   = useCallback(function() { setIsPaused(true);  setTimerOn(false); }, []);
+  var resume  = useCallback(function() { setIsPaused(false); setTimerOn(true);  }, []);
+  var toMenu  = useCallback(function() {
+    setIsPaused(false); setTimerOn(false); setTimerSecs(0); setShowMenu(true);
   }, []);
 
-  var isPlaying = game.status === GAME_STATUS.PLAYING &&
-    !showMenu && !showLeaderboard && !showSettings;
+  var playing = game.status === STATUS.PLAYING && !showMenu && !showLB && !showSet;
 
-  var boardEl = (
-    <div style={lay.boardArea}>
-      <div style={lay.boardScroll}>
-        <Board
-          tiles={game.tiles}
-          selected={game.selected}
-          hintIds={game.hintIds}
-          matchIds={game.matchIds}
-          mistakeId={game.mistakeId}
-          glowIds={game.glowIds}
-          onTileClick={game.handleTileClick}
-        />
-      </div>
-    </div>
-  );
+  var rootStyle = {
+    width:    "100%",
+    height:   "100%",
+    overflow: "hidden",
+    position: "relative",
+    background: theme.bg,
+  };
+
+  var glow1Style = {
+    position:   "fixed",
+    top:        "-20%",
+    left:       "-10%",
+    width:      "60%",
+    height:     "60%",
+    background: "radial-gradient(ellipse," + theme.glow1 + " 0%,transparent 70%)",
+    zIndex:     0,
+    pointerEvents: "none",
+  };
+
+  var glow2Style = {
+    position:   "fixed",
+    bottom:     "-20%",
+    right:      "-10%",
+    width:      "60%",
+    height:     "60%",
+    background: "radial-gradient(ellipse," + theme.glow2 + " 0%,transparent 70%)",
+    zIndex:     0,
+    pointerEvents: "none",
+  };
+
+  var colStyle   = { position:"absolute", inset:0, display:"flex", flexDirection:"column", zIndex:1 };
+  var rowStyle   = { position:"absolute", inset:0, display:"flex", flexDirection:"row", zIndex:1 };
+  var boardStyle = { flex:1, minHeight:0, minWidth:0, position:"relative" };
 
   return (
-    <div style={lay.root}>
-      <div style={lay.bg} />
-      <div style={lay.glow1} />
-      <div style={lay.glow2} />
-      <SyncIndicator status={syncStatus} />
+    <div style={rootStyle}>
+      <div style={glow1Style} />
+      <div style={glow2Style} />
+      <SyncDot status={syncStatus} />
 
-      {showLeaderboard && (
-        <Leaderboard onClose={function() { setShowLeaderboard(false); }} />
-      )}
-      {showSettings && (
+      {showLB  && <Leaderboard onClose={function() { setShowLB(false); }} />}
+      {showSet && (
         <Settings
           displayName={player.displayName || "Speler"}
           skillScore={player.skillScore || 50}
-          onChangeName={updateDisplayName}
-          onClose={function() { setShowSettings(false); }}
+          onChangeName={updateName}
+          onClose={function() { setShowSet(false); }}
+          currentTheme={themeId}
+          onThemeChange={handleTheme}
         />
       )}
 
-      {(game.status === GAME_STATUS.MENU || showMenu) &&
-        !showLeaderboard && !showSettings && (
+      {(game.status === STATUS.MENU || showMenu) && !showLB && !showSet && (
         <MainMenu
           skillScore={player.skillScore || 50}
           highScore={player.highScore || 0}
           displayName={player.displayName || "Speler"}
-          onStart={handleStart}
-          onContinue={handleContinue}
-          onChangeName={updateDisplayName}
-          onLeaderboard={function() { setShowLeaderboard(true); }}
-          onSettings={function()    { setShowSettings(true);    }}
+          onStart={start}
+          onContinue={cont}
+          onChangeName={updateName}
+          onLeaderboard={function() { setShowLB(true); }}
+          onSettings={function()    { setShowSet(true); }}
+          theme={theme}
         />
       )}
 
-      {game.status === GAME_STATUS.WON &&
-        !showMenu && !showLeaderboard && !showSettings && (
+      {game.status === STATUS.WON && !showMenu && !showLB && !showSet && (
         <WinScreen
           score={game.score}
           summary={summary || {}}
           timerSecs={timerSecs}
           medal={medal}
-          onRestart={handleRestart}
-          onMenu={handleGoToMenu}
+          onRestart={restart}
+          onMenu={toMenu}
         />
       )}
-      {game.status === GAME_STATUS.LOST &&
-        !showMenu && !showLeaderboard && !showSettings && (
+      {game.status === STATUS.LOST && !showMenu && !showLB && !showSet && (
         <LostScreen
           score={game.score}
           summary={summary || {}}
-          onRestart={handleRestart}
-          onMenu={handleGoToMenu}
+          onRestart={restart}
+          onMenu={toMenu}
         />
       )}
 
-      {isPlaying && isLandscape && (
-        <div style={lay.landscape}>
+      {playing && landscape && (
+        <div style={rowStyle}>
           <HUD
             score={game.score}
             activeTiles={game.activeTiles.length}
             totalTiles={game.totalTiles}
             availPairs={game.availPairs}
-            skillScore={activeSkill}
-            timerDisplay={timerDisplay}
-            onPause={handlePause}
-            isLandscape={true}
+            skillScore={skill}
+            timer={timer}
+            onPause={pause}
+            landscape={true}
+            theme={theme}
           />
-          {boardEl}
+          <div style={boardStyle}>
+            <Board
+              tiles={game.tiles}
+              selected={game.selected}
+              hintIds={game.hintIds}
+              matchIds={game.matchIds}
+              mistakeId={game.mistakeId}
+              glowIds={game.glowIds}
+              onTileClick={game.handleClick}
+            />
+          </div>
           <ActionBar
             onHint={game.handleHint}
             onUndo={game.handleUndo}
             onShuffle={game.handleShuffle}
             canUndo={game.history.length > 0}
-            isLandscape={true}
-            onPause={handlePause}
+            landscape={true}
+            onPause={pause}
           />
         </div>
       )}
 
-      {isPlaying && !isLandscape && (
-        <div style={lay.portrait}>
+      {playing && !landscape && (
+        <div style={colStyle}>
           <HUD
             score={game.score}
             activeTiles={game.activeTiles.length}
             totalTiles={game.totalTiles}
             availPairs={game.availPairs}
-            skillScore={activeSkill}
-            timerDisplay={timerDisplay}
-            onPause={handlePause}
-            isLandscape={false}
+            skillScore={skill}
+            timer={timer}
+            onPause={pause}
+            landscape={false}
+            theme={theme}
           />
-          {boardEl}
+          <div style={boardStyle}>
+            <Board
+              tiles={game.tiles}
+              selected={game.selected}
+              hintIds={game.hintIds}
+              matchIds={game.matchIds}
+              mistakeId={game.mistakeId}
+              glowIds={game.glowIds}
+              onTileClick={game.handleClick}
+            />
+          </div>
           <ActionBar
             onHint={game.handleHint}
             onUndo={game.handleUndo}
             onShuffle={game.handleShuffle}
             canUndo={game.history.length > 0}
-            isLandscape={false}
+            landscape={false}
           />
         </div>
       )}
 
       {isPaused && (
         <PauseMenu
-          onResume={handleResume}
-          onRestart={handleRestart}
-          onMenu={handleGoToMenu}
-          timerDisplay={timerDisplay}
+          onResume={resume}
+          onRestart={restart}
+          onMenu={toMenu}
+          timer={timer}
           score={game.score}
         />
       )}
       <ComboPopup combo={game.comboPopup} />
-      <FlowAlert event={game.flowEvent} isPlaying={isPlaying} />
     </div>
   );
 }
-
-var scrollStyle = {
-  width:                 "100%",
-  height:                "100%",
-  overflowX:             "auto",
-  overflowY:             "auto",
-  WebkitOverflowScrolling:"touch",
-  display:               "flex",
-  alignItems:            "center",
-  justifyContent:        "center",
-  padding:               "8px",
-};
-
-var lay = {
-  root:       { width:"100%", height:"100%", display:"flex", flexDirection:"column", overflow:"hidden", position:"relative", background:"#000" },
-  bg:         { position:"fixed", inset:0, background:"#000", zIndex:0, pointerEvents:"none" },
-  glow1:      { position:"fixed", top:"-20%", left:"-10%", width:"60%", height:"60%", background:"radial-gradient(ellipse,rgba(255,107,0,0.12) 0%,transparent 70%)", zIndex:0, pointerEvents:"none" },
-  glow2:      { position:"fixed", bottom:"-20%", right:"-10%", width:"60%", height:"60%", background:"radial-gradient(ellipse,rgba(0,229,255,0.08) 0%,transparent 70%)", zIndex:0, pointerEvents:"none" },
-  portrait:   { display:"flex", flexDirection:"column", height:"100%", position:"relative", zIndex:1 },
-  landscape:  { display:"flex", flexDirection:"row", height:"100%", position:"relative", zIndex:1 },
-  boardArea:  { flex:1, minHeight:0, position:"relative", zIndex:1 },
-  boardScroll: scrollStyle,
-};

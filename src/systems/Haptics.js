@@ -1,5 +1,5 @@
 function vibe(p) {
-  if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+  if (typeof navigator !== "undefined" && navigator.vibrate) {
     try { navigator.vibrate(p); } catch(e) {}
   }
 }
@@ -13,9 +13,10 @@ export var Haptics = {
   win:     function()  { vibe([40,20,40,20,80]); },
   lose:    function()  { vibe([80,30,80]); },
   combo:   function(n) {
-    var p = [];
-    var c = Math.min(n, 6);
-    for (var i = 0; i < c; i++) { p.push(15 + i*8); if (i < c-1) p.push(6); }
-    vibe(p);
+    var pts = [];
+    var c = Math.min(n,6);
+    var i;
+    for (i=0;i<c;i++) { pts.push(15+i*8); if (i<c-1) pts.push(6); }
+    vibe(pts);
   },
 };
