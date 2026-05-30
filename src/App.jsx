@@ -294,4 +294,4 @@ export default function App() {
       <ComboPopup combo={game.comboPopup} />
     </div>
   );
-}
+} 
