@@ -18,7 +18,10 @@ function useOrientation() {
     var h = function() { set(window.innerWidth > window.innerHeight); };
     window.addEventListener("resize", h);
     window.addEventListener("orientationchange", h);
-    return function() { window.removeEventListener("resize", h); window.removeEventListener("orientationchange", h); };
+    return function() {
+      window.removeEventListener("resize", h);
+      window.removeEventListener("orientationchange", h);
+    };
   }, []);
   return s[0];
 }
@@ -43,16 +46,26 @@ export default function App() {
   var timerRef = useRef(null);
   var isLandscape = useOrientation();
 
-  var handleSkillUpdate = useCallback(function(sk) { persistPlayer({ skillScore: sk }); }, [persistPlayer]);
+  var handleSkillUpdate = useCallback(function(sk) {
+    persistPlayer({ skillScore: sk });
+  }, [persistPlayer]);
 
   var handleSessionEnd = useCallback(async function(snap, score, result) {
     var newHigh = Math.max(player.highScore || 0, score);
-    persistPlayer({ highScore:newHigh, totalGames:(player.totalGames||0)+1, totalWins:(player.totalWins||0)+(result==="win"?1:0) });
+    persistPlayer({
+      highScore:  newHigh,
+      totalGames: (player.totalGames || 0) + 1,
+      totalWins:  (player.totalWins  || 0) + (result === "win" ? 1 : 0),
+    });
     setTimerRunning(false);
     await persistSession(snap, score, result);
   }, [player, persistPlayer, persistSession]);
 
-  var game = useGameState({ skillScore:activeSkill, onSkillUpdate:handleSkillUpdate, onSessionEnd:handleSessionEnd });
+  var game = useGameState({
+    skillScore:    activeSkill,
+    onSkillUpdate: handleSkillUpdate,
+    onSessionEnd:  handleSessionEnd,
+  });
 
   var summary = useMemo(function() {
     if (game.status === GAME_STATUS.WON || game.status === GAME_STATUS.LOST) {
@@ -63,45 +76,68 @@ export default function App() {
 
   useEffect(function() {
     if (timerRunning) {
-      timerRef.current = setInterval(function() { setTimerSecs(function(s) { return s+1; }); }, 1000);
-    } else { clearInterval(timerRef.current); }
+      timerRef.current = setInterval(function() {
+        setTimerSecs(function(s) { return s + 1; });
+      }, 1000);
+    } else {
+      clearInterval(timerRef.current);
+    }
     return function() { clearInterval(timerRef.current); };
   }, [timerRunning]);
 
-  var m = String(Math.floor(timerSecs/60)).padStart(2,"0");
-  var sc = String(timerSecs%60).padStart(2,"0");
+  var m  = String(Math.floor(timerSecs / 60)).padStart(2, "0");
+  var sc = String(timerSecs % 60).padStart(2, "0");
   var timerDisplay = m + ":" + sc;
 
   var medal = null;
-  if      (timerSecs < 120) medal = { label:"GOLD",   color:"#fbbf24" };
-  else if (timerSecs < 240) medal = { label:"SILVER", color:"#94a3b8" };
-  else if (timerSecs < 360) medal = { label:"BRONZE", color:"#cd7c2f" };
+  if      (timerSecs < 120) medal = { label: "GOLD",   color: "#fbbf24" };
+  else if (timerSecs < 240) medal = { label: "SILVER", color: "#94a3b8" };
+  else if (timerSecs < 360) medal = { label: "BRONZE", color: "#cd7c2f" };
 
   var handleStart = useCallback(function(lid, diff) {
     var skill = DIFFICULTY_SCORES[diff] || 72;
     setActiveSkill(skill);
-    setSavedLayout(lid||"turtle"); setTimerSecs(0); setTimerRunning(true);
-    setIsPaused(false); setShowMenu(false); setShowLeaderboard(false); setShowSettings(false);
+    setSavedLayout(lid || "turtle");
+    setTimerSecs(0);
+    setTimerRunning(true);
+    setIsPaused(false);
+    setShowMenu(false);
+    setShowLeaderboard(false);
+    setShowSettings(false);
     game.startGame(lid);
   }, [game]);
 
   var handleContinue = useCallback(function() {
-    setTimerSecs(0); setTimerRunning(true); setIsPaused(false);
-    setShowMenu(false); setShowLeaderboard(false); setShowSettings(false);
+    setTimerSecs(0);
+    setTimerRunning(true);
+    setIsPaused(false);
+    setShowMenu(false);
+    setShowLeaderboard(false);
+    setShowSettings(false);
     game.startGame(savedLayout);
   }, [game, savedLayout]);
 
   var handleRestart = useCallback(function() {
-    setTimerSecs(0); setTimerRunning(true); setIsPaused(false);
-    setShowMenu(false); setShowLeaderboard(false); setShowSettings(false);
+    setTimerSecs(0);
+    setTimerRunning(true);
+    setIsPaused(false);
+    setShowMenu(false);
+    setShowLeaderboard(false);
+    setShowSettings(false);
     game.startGame(savedLayout);
   }, [game, savedLayout]);
 
   var handlePause    = useCallback(function() { setIsPaused(true);  setTimerRunning(false); }, []);
   var handleResume   = useCallback(function() { setIsPaused(false); setTimerRunning(true);  }, []);
-  var handleGoToMenu = useCallback(function() { setIsPaused(false); setTimerRunning(false); setTimerSecs(0); setShowMenu(true); }, []);
+  var handleGoToMenu = useCallback(function() {
+    setIsPaused(false);
+    setTimerRunning(false);
+    setTimerSecs(0);
+    setShowMenu(true);
+  }, []);
 
-  var isPlaying = game.status === GAME_STATUS.PLAYING && !showMenu && !showLeaderboard && !showSettings;
+  var isPlaying = game.status === GAME_STATUS.PLAYING &&
+    !showMenu && !showLeaderboard && !showSettings;
 
   var boardEl = (
     <div style={lay.boardArea}>
@@ -126,14 +162,24 @@ export default function App() {
       <div style={lay.glow2} />
       <SyncIndicator status={syncStatus} />
 
-      {showLeaderboard && <Leaderboard onClose={function() { setShowLeaderboard(false); }} />}
-      {showSettings    && <Settings displayName={player.displayName||"Speler"} skillScore={player.skillScore||50} onChangeName={updateDisplayName} onClose={function() { setShowSettings(false); }} />}
+      {showLeaderboard && (
+        <Leaderboard onClose={function() { setShowLeaderboard(false); }} />
+      )}
+      {showSettings && (
+        <Settings
+          displayName={player.displayName || "Speler"}
+          skillScore={player.skillScore || 50}
+          onChangeName={updateDisplayName}
+          onClose={function() { setShowSettings(false); }}
+        />
+      )}
 
-      {(game.status === GAME_STATUS.MENU || showMenu) && !showLeaderboard && !showSettings && (
+      {(game.status === GAME_STATUS.MENU || showMenu) &&
+        !showLeaderboard && !showSettings && (
         <MainMenu
-          skillScore={player.skillScore||50}
-          highScore={player.highScore||0}
-          displayName={player.displayName||"Speler"}
+          skillScore={player.skillScore || 50}
+          highScore={player.highScore || 0}
+          displayName={player.displayName || "Speler"}
           onStart={handleStart}
           onContinue={handleContinue}
           onChangeName={updateDisplayName}
@@ -142,35 +188,100 @@ export default function App() {
         />
       )}
 
-      {game.status === GAME_STATUS.WON && !showMenu && !showLeaderboard && !showSettings && (
-        <WinScreen score={game.score} summary={summary||{}} timerSecs={timerSecs} medal={medal} onRestart={handleRestart} onMenu={handleGoToMenu} />
+      {game.status === GAME_STATUS.WON &&
+        !showMenu && !showLeaderboard && !showSettings && (
+        <WinScreen
+          score={game.score}
+          summary={summary || {}}
+          timerSecs={timerSecs}
+          medal={medal}
+          onRestart={handleRestart}
+          onMenu={handleGoToMenu}
+        />
       )}
-      {game.status === GAME_STATUS.LOST && !showMenu && !showLeaderboard && !showSettings && (
-        <LostScreen score={game.score} summary={summary||{}} onRestart={handleRestart} onMenu={handleGoToMenu} />
+      {game.status === GAME_STATUS.LOST &&
+        !showMenu && !showLeaderboard && !showSettings && (
+        <LostScreen
+          score={game.score}
+          summary={summary || {}}
+          onRestart={handleRestart}
+          onMenu={handleGoToMenu}
+        />
       )}
 
       {isPlaying && isLandscape && (
         <div style={lay.landscape}>
-          <HUD score={game.score} activeTiles={game.activeTiles.length} totalTiles={game.totalTiles} availPairs={game.availPairs} skillScore={activeSkill} timerDisplay={timerDisplay} onPause={handlePause} isLandscape={true} />
+          <HUD
+            score={game.score}
+            activeTiles={game.activeTiles.length}
+            totalTiles={game.totalTiles}
+            availPairs={game.availPairs}
+            skillScore={activeSkill}
+            timerDisplay={timerDisplay}
+            onPause={handlePause}
+            isLandscape={true}
+          />
           {boardEl}
-          <ActionBar onHint={game.handleHint} onUndo={game.handleUndo} onShuffle={game.handleShuffle} canUndo={game.history.length>0} isLandscape={true} onPause={handlePause} />
+          <ActionBar
+            onHint={game.handleHint}
+            onUndo={game.handleUndo}
+            onShuffle={game.handleShuffle}
+            canUndo={game.history.length > 0}
+            isLandscape={true}
+            onPause={handlePause}
+          />
         </div>
       )}
 
       {isPlaying && !isLandscape && (
         <div style={lay.portrait}>
-          <HUD score={game.score} activeTiles={game.activeTiles.length} totalTiles={game.totalTiles} availPairs={game.availPairs} skillScore={activeSkill} timerDisplay={timerDisplay} onPause={handlePause} isLandscape={false} />
+          <HUD
+            score={game.score}
+            activeTiles={game.activeTiles.length}
+            totalTiles={game.totalTiles}
+            availPairs={game.availPairs}
+            skillScore={activeSkill}
+            timerDisplay={timerDisplay}
+            onPause={handlePause}
+            isLandscape={false}
+          />
           {boardEl}
-          <ActionBar onHint={game.handleHint} onUndo={game.handleUndo} onShuffle={game.handleShuffle} canUndo={game.history.length>0} isLandscape={false} />
+          <ActionBar
+            onHint={game.handleHint}
+            onUndo={game.handleUndo}
+            onShuffle={game.handleShuffle}
+            canUndo={game.history.length > 0}
+            isLandscape={false}
+          />
         </div>
       )}
 
-      {isPaused && <PauseMenu onResume={handleResume} onRestart={handleRestart} onMenu={handleGoToMenu} timerDisplay={timerDisplay} score={game.score} />}
+      {isPaused && (
+        <PauseMenu
+          onResume={handleResume}
+          onRestart={handleRestart}
+          onMenu={handleGoToMenu}
+          timerDisplay={timerDisplay}
+          score={game.score}
+        />
+      )}
       <ComboPopup combo={game.comboPopup} />
       <FlowAlert event={game.flowEvent} isPlaying={isPlaying} />
     </div>
   );
 }
+
+var scrollStyle = {
+  width:                 "100%",
+  height:                "100%",
+  overflowX:             "auto",
+  overflowY:             "auto",
+  WebkitOverflowScrolling:"touch",
+  display:               "flex",
+  alignItems:            "center",
+  justifyContent:        "center",
+  padding:               "8px",
+};
 
 var lay = {
   root:       { width:"100%", height:"100%", display:"flex", flexDirection:"column", overflow:"hidden", position:"relative", background:"#000" },
@@ -180,5 +291,5 @@ var lay = {
   portrait:   { display:"flex", flexDirection:"column", height:"100%", position:"relative", zIndex:1 },
   landscape:  { display:"flex", flexDirection:"row", height:"100%", position:"relative", zIndex:1 },
   boardArea:  { flex:1, minHeight:0, position:"relative", zIndex:1 },
-  boardScroll:{ width:"100%", height:"100%", overflowX:"auto", overflowY:"auto", WebkitOverflowScrolling:"touch", display:"flex", alignItems:"center", justifyContent:"center", padding:"8px" },
+  boardScroll: scrollStyle,
 };
