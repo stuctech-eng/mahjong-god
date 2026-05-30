@@ -1,125 +1,129 @@
 import { isTileFree } from "../engine/TileLogic.js";
 
-export var TILE_W = 48;
-export var TILE_H = 58;
+export var TILE_W = 52;
+export var TILE_H = 64;
 export var LAYER_OFFSET = 5;
 
-var CHAR_S   = ["","\u4e00","\u4e8c","\u4e09","\u56db","\u4e94","\u516d","\u4e03","\u516b","\u4e5d"];
-var WIND_S   = ["","\u6771","\u5357","\u897f","\u5317"];
-var DRAGON_S = ["","\u4e2d","\u767a","\u767d"];
-var FLOWER_S = ["","\u6885","\u862d","\u83ca","\u7af9"];
-var SEASON_S = ["","\u6625","\u590f","\u79cb","\u51ac"];
-var CIRC_S   = ["","\u2460","\u2461","\u2462","\u2463","\u2464","\u2465","\u2466","\u2467","\u2468"];
-var BAM_N    = ["","1","2","3","4","5","6","7","8","9"];
+var COLS = 9;
+var ROWS = 4;
 
-var COLORS = { char:"#c0392b", bam:"#1a7a3a", circ:"#1a5276", wind:"#6c3483", dragon:"#c0392b", flower:"#d35400", season:"#117a65" };
-var LABELS = { char:"\u842c", bam:"\u7af9", circ:"\u7b52", wind:"", dragon:"", flower:"\u82b1", season:"\u5b63" };
+var POS = {
+  dragon: { 1:[0,0], 2:[1,0], 3:[2,0] },
+  char:   { 1:[3,0], 2:[4,0], 3:[5,0], 4:[6,0], 5:[7,0], 6:[8,0], 7:[0,1], 8:[1,1], 9:[2,1] },
+  bam:    { 1:[3,1], 2:[4,1], 3:[5,1], 4:[6,1], 5:[7,1], 6:[8,1], 7:[0,2], 8:[1,2], 9:[2,2] },
+  circ:   { 1:[3,2], 2:[4,2], 3:[5,2], 4:[6,2], 5:[7,2], 6:[8,2], 7:[0,3], 8:[1,3], 9:[2,3] },
+  flower: { 1:[4,3], 2:[5,3], 3:[6,3], 4:[7,3] },
+  season: { 1:[4,3], 2:[5,3], 3:[6,3], 4:[7,3] },
+};
 
-function getSym(tile) {
-  switch(tile.suit) {
-    case "char":   return CHAR_S[tile.value]   || "";
-    case "bam":    return BAM_N[tile.value]     || "";
-    case "circ":   return CIRC_S[tile.value]   || "";
-    case "wind":   return WIND_S[tile.value]   || "";
-    case "dragon": return DRAGON_S[tile.value] || "";
-    case "flower": return FLOWER_S[tile.value] || "";
-    case "season": return SEASON_S[tile.value] || "";
-    default: return "?";
-  }
+var WIND_SYM  = ["","\u6771","\u5357","\u897f","\u5317"];
+var WIND_COL  = ["","#c0392b","#1a7a3a","#1a5276","#6c3483"];
+
+function getSpriteStyle(suit, value) {
+  var p = POS[suit] && POS[suit][value];
+  if (!p) return null;
+  var col = p[0];
+  var row = p[1];
+  var px = (col / (COLS - 1)) * 100;
+  var py = (row / (ROWS - 1)) * 100;
+  return {
+    backgroundImage:    "url(/tiles.jpg)",
+    backgroundSize:     (COLS * 100) + "% " + (ROWS * 100) + "%",
+    backgroundPosition: px + "% " + py + "%",
+    backgroundRepeat:   "no-repeat",
+  };
 }
 
 export function Tile({ tile, allTiles, isSelected, isHint, isMatch, isMistake, isGlow, onClick }) {
-  var free  = isTileFree(tile, allTiles);
-  var color = COLORS[tile.suit] || "#333";
-  var sym   = getSym(tile);
-  var label = LABELS[tile.suit] || "";
-  var isBam = tile.suit === "bam";
+  var free = isTileFree(tile, allTiles);
+  var spriteStyle = getSpriteStyle(tile.suit, tile.value);
+  var isWind = tile.suit === "wind";
+
+  var layerColors = ["#4a7a4a","#3a6aaa","#7a4aaa","#cc8800","#cc4444"];
+  var sideColor = layerColors[tile.layer % layerColors.length];
 
   var base = {
     position:        "absolute",
     width:           TILE_W - 2,
     height:          TILE_H - 2,
-    borderRadius:    6,
+    borderRadius:    8,
     cursor:          free ? "pointer" : "default",
-    display:         "flex",
-    flexDirection:   "column",
-    alignItems:      "center",
-    justifyContent:  "center",
     userSelect:      "none",
     WebkitUserSelect:"none",
     overflow:        "hidden",
     zIndex:          tile.layer * 10 + (isSelected ? 100 : 1),
-    transition:      "transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease",
   };
+
+  var sideW = 5;
 
   var style;
 
   if (!free) {
     style = Object.assign({}, base, {
-      background:  "linear-gradient(160deg,#1e1e28,#14141c)",
-      border:      "2px solid #0a0a10",
-      opacity:     0.6,
-      transform:   "scale(0.95)",
-      transition:  "none",
+      background: "linear-gradient(160deg,#2a2a3a,#1a1a28)",
+      border:     "2px solid #111",
+      opacity:    0.65,
     });
-  } else if (isMatch) {
+    return <div style={style} />;
+  }
+
+  if (isMatch) {
     style = Object.assign({}, base, {
-      background:  "linear-gradient(160deg,#fff9e6,#ffd700)",
-      border:      "2px solid #ffd700",
-      boxShadow:   "0 0 30px rgba(255,215,0,1)",
-      animation:   "matchPop 0.2s ease-out forwards",
-      transition:  "none",
+      background: "#ffd700",
+      border:     "2px solid #ffd700",
+      boxShadow:  "0 0 30px rgba(255,215,0,1)",
+      animation:  "matchPop 0.2s ease-out forwards",
     });
-  } else if (isMistake) {
+    return <div style={style} />;
+  }
+
+  if (isMistake) {
     style = Object.assign({}, base, {
-      background:  "linear-gradient(160deg,#fdf6ec,#f5e6d0)",
-      border:      "3px solid #c0392b",
-      boxShadow:   "0 0 16px rgba(192,57,43,0.9)",
-      animation:   "shake 0.25s ease-out",
-      transition:  "none",
+      border:     "3px solid #c0392b",
+      boxShadow:  "0 0 16px rgba(192,57,43,0.9)",
+      animation:  "shake 0.25s ease-out",
+      background: "#fff",
     });
   } else if (isSelected) {
     style = Object.assign({}, base, {
-      background:  "linear-gradient(160deg,#fffde7,#fff59d,#ffd600)",
-      border:      "3px solid #ffd600",
-      boxShadow:   "0 0 28px rgba(255,214,0,0.95), 0 "+(4+tile.layer)+"px "+(12+tile.layer*2)+"px rgba(0,0,0,0.5)",
-      transform:   "translateY(-7px) scale(1.09)",
-      animation:   "glowPulse 1.5s ease-in-out infinite",
+      border:     "3px solid #ffd600",
+      boxShadow:  "0 0 28px rgba(255,214,0,0.95)",
+      transform:  "translateY(-6px) scale(1.06)",
+      transition: "transform 0.12s ease",
+      background: "#fffde7",
     });
   } else if (isHint) {
     style = Object.assign({}, base, {
-      background:  "linear-gradient(160deg,#e8f8e8,#c8f0c8)",
-      border:      "3px solid #27ae60",
-      boxShadow:   "0 0 20px rgba(39,174,96,0.9)",
-      transform:   "translateY(-4px) scale(1.06)",
+      border:     "3px solid #27ae60",
+      boxShadow:  "0 0 20px rgba(39,174,96,0.9)",
+      transform:  "translateY(-3px) scale(1.03)",
+      background: "#f0fff0",
     });
   } else {
-    var depth = "0 "+(3+tile.layer)+"px "+(6+tile.layer*2)+"px rgba(0,0,0,0.45)";
-    var inner = "inset 0 2px 0 rgba(255,255,255,0.85),inset 0 -3px 0 rgba(0,0,0,0.15),inset -2px 0 0 rgba(0,0,0,0.08)";
-    var glow  = isGlow ? "0 0 14px rgba(255,107,0,0.5)," : "";
     style = Object.assign({}, base, {
-      background:  "linear-gradient(170deg,#fdfaf3 0%,#f5ead5 50%,#ede0c4 100%)",
-      border:      "2px solid #b8a88a",
-      boxShadow:   glow + depth + "," + inner,
-      transform:   free ? "scale(1.02)" : "scale(1)",
+      background: "#ffffff",
+      border:     "2px solid #ddd",
+      boxShadow:  sideW + "px " + sideW + "px 0 " + sideColor + ", 0 2px 4px rgba(0,0,0,0.3)",
     });
   }
 
   return (
-    <div onClick={free ? onClick : undefined} style={style}>
-      {free && (
-        <div style={{ position:"absolute", top:0, left:0, right:0, height:"40%", background:"linear-gradient(180deg,rgba(255,255,255,0.7) 0%,transparent 100%)", borderRadius:"4px 4px 0 0", pointerEvents:"none" }} />
-      )}
-      <div style={{ fontSize:isBam ? 20 : 24, lineHeight:1, fontWeight:900, color:free ? color : "rgba(60,60,80,0.25)", fontFamily:isBam ? "monospace" : "'Noto Serif SC','STSong',serif", textShadow:free ? "0 1px 3px rgba(0,0,0,0.2)" : "none" }}>
-        {sym}
-      </div>
-      {label && free && (
-        <div style={{ fontSize:10, color:color, opacity:0.65, marginTop:1, fontFamily:"serif", fontWeight:700 }}>
-          {label}
+    <div style={style}>
+      {isWind ? (
+        <div style={{ width:"100%", height:"100%", display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <span style={{ fontSize:28, fontWeight:900, color:WIND_COL[tile.value], fontFamily:"'Noto Serif SC',serif" }}>
+            {WIND_SYM[tile.value]}
+          </span>
+        </div>
+      ) : spriteStyle ? (
+        <div style={Object.assign({}, spriteStyle, { width:"100%", height:"100%", borderRadius:6 })} />
+      ) : (
+        <div style={{ width:"100%", height:"100%", display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <span style={{ fontSize:24, color:"#333", fontWeight:900 }}>?</span>
         </div>
       )}
       {isMatch && (
-        <div style={{ position:"absolute", inset:0, background:"rgba(255,255,255,0.9)", borderRadius:4, animation:"flashWhite 0.2s ease-out forwards", pointerEvents:"none" }} />
+        <div style={{ position:"absolute", inset:0, background:"rgba(255,255,255,0.9)", borderRadius:6, animation:"flashWhite 0.2s ease-out forwards", pointerEvents:"none" }} />
       )}
     </div>
   );
